@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { activateKeepAwakeAsync, deactivateKeepAwake } from "expo-keep-awake";
 import { MacroWheel } from "../../../src/components/MacroWheel";
 import { RecipeImage } from "../../../src/components/RecipeImage";
 import { useRecipe, useDeleteRecipe } from "../../../src/hooks/useRecipes";
@@ -14,23 +15,33 @@ export default function RecipeDetailScreen() {
   const { data: recipe, isLoading, error } = useRecipe(id || "");
   const deleteRecipe = useDeleteRecipe();
   
-  // Scaling state
-  const [scaledServings, setScaledServings] = useState<number>(1);
+  // Multiplier state (1x, 2x, 3x, etc.)
+  const [multiplier, setMultiplier] = useState<number>(1);
   
-  // Initialize scaled servings when recipe loads
+  // Keep screen awake state
+  const [keepAwake, setKeepAwake] = useState(false);
+  
+  // Handle keep awake toggle
   useEffect(() => {
-    if (recipe?.servings) {
-      setScaledServings(recipe.servings);
+    if (keepAwake) {
+      activateKeepAwakeAsync();
+    } else {
+      deactivateKeepAwake();
     }
-  }, [recipe?.servings]);
+    
+    // Cleanup when leaving the screen
+    return () => {
+      deactivateKeepAwake();
+    };
+  }, [keepAwake]);
   
-  // Calculate scale factor
+  // Calculate scaled values
   const originalServings = recipe?.servings || 1;
-  const scaleFactor = scaledServings / originalServings;
+  const scaledServings = originalServings * multiplier;
   
   // Helper to format scaled amounts nicely
   const formatAmount = (amount: number): string => {
-    const scaled = amount * scaleFactor;
+    const scaled = amount * multiplier;
     if (scaled === Math.floor(scaled)) {
       return scaled.toString();
     }
@@ -136,41 +147,57 @@ export default function RecipeDetailScreen() {
               {recipe.name}
             </Text>
             
-            {/* Servings Adjuster */}
-            <View className="bg-white rounded-2xl p-4 mb-6 flex-row items-center justify-between shadow-md">
-              <View className="flex-row items-center">
-                <Text className="text-lg mr-2">🍽️</Text>
-                <Text className="text-gray-700 font-medium">Servings</Text>
-              </View>
-              <View className="flex-row items-center gap-3">
-                <TouchableOpacity
-                  className="w-8 h-8 bg-white rounded-full items-center justify-center border border-gray-200"
-                  onPress={() => setScaledServings(Math.max(1, scaledServings - 1))}
-                >
-                  <Text className="text-gray-600 text-lg font-medium">−</Text>
-                </TouchableOpacity>
-                <Text className="text-xl font-semibold text-gray-900 w-8 text-center">
-                  {scaledServings}
-                </Text>
-                <TouchableOpacity
-                  className="w-8 h-8 bg-white rounded-full items-center justify-center border border-gray-200"
-                  onPress={() => setScaledServings(scaledServings + 1)}
-                >
-                  <Text className="text-gray-600 text-lg font-medium">+</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-            
-            {/* Scale indicator */}
-            {scaleFactor !== 1 && (
-              <View className="flex-row items-center justify-center mb-4">
-                <View className="bg-orange-100 px-3 py-1 rounded-full">
-                  <Text className="text-orange-600 text-sm">
-                    Scaled from {originalServings} to {scaledServings} servings ({scaleFactor.toFixed(1)}x)
+            {/* Servings, Multiplier & Keep Awake */}
+            <View className="flex-row gap-3 mb-6">
+              {/* Servings Display */}
+              <View className="flex-1 bg-white rounded-2xl p-4 shadow-md justify-center">
+                <View className="flex-row items-center justify-center">
+                  <Text className="text-lg mr-2">🍽️</Text>
+                  <Text className="text-gray-700">
+                    <Text className="font-bold text-gray-900 text-xl">{scaledServings}</Text>
+                    <Text className="text-gray-400"> servings</Text>
                   </Text>
                 </View>
+                {multiplier > 1 && (
+                  <Text className="text-xs text-gray-400 text-center mt-1">
+                    (originally {originalServings})
+                  </Text>
+                )}
               </View>
-            )}
+
+              {/* Multiplier */}
+              <View className="bg-white rounded-2xl p-4 shadow-md">
+                <Text className="text-xs text-gray-400 mb-2 text-center">Multiply</Text>
+                <View className="flex-row items-center gap-2">
+                  <TouchableOpacity
+                    className="w-7 h-7 bg-gray-100 rounded-full items-center justify-center"
+                    onPress={() => setMultiplier(Math.max(1, multiplier - 1))}
+                  >
+                    <Text className="text-gray-600 text-sm font-medium">−</Text>
+                  </TouchableOpacity>
+                  <Text className="text-lg font-bold text-primary-500 w-8 text-center">
+                    {multiplier}x
+                  </Text>
+                  <TouchableOpacity
+                    className="w-7 h-7 bg-gray-100 rounded-full items-center justify-center"
+                    onPress={() => setMultiplier(multiplier + 1)}
+                  >
+                    <Text className="text-gray-600 text-sm font-medium">+</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+              
+              {/* Keep Screen On Toggle */}
+              <TouchableOpacity 
+                className={`bg-white rounded-2xl p-4 items-center justify-center shadow-md ${keepAwake ? 'border-2 border-primary-500' : ''}`}
+                onPress={() => setKeepAwake(!keepAwake)}
+              >
+                <Text className="text-lg mb-1">{keepAwake ? '☀️' : '🌙'}</Text>
+                <Text className={`text-xs font-medium ${keepAwake ? 'text-primary-500' : 'text-gray-400'}`}>
+                  {keepAwake ? 'ON' : 'OFF'}
+                </Text>
+              </TouchableOpacity>
+            </View>
 
             {/* Tags */}
             <View className="flex-row flex-wrap gap-2 mb-6">
@@ -186,46 +213,54 @@ export default function RecipeDetailScreen() {
               ))}
             </View>
 
-            {/* Macro Wheel */}
-            <View className="bg-white rounded-2xl p-5 mb-6 shadow-md">
-              <Text className="text-lg font-semibold text-gray-900 mb-4">
-                Nutrition Facts <Text className="text-sm font-normal text-gray-400">(per serving)</Text>
-              </Text>
-              <MacroWheel
-                macros={recipe.macros}
-                size={120}
-                showLegend={true}
-              />
-            </View>
+            {/* Nutrition & Time Row */}
+            <View className="flex-row gap-3 mb-6">
+              {/* Macro Wheel - takes ~60% */}
+              <View className="flex-[3] bg-white rounded-2xl p-4 shadow-md">
+                <Text className="text-base font-semibold text-gray-900 mb-3">
+                  Nutrition <Text className="text-xs font-normal text-gray-400">(per serving)</Text>
+                </Text>
+                <MacroWheel
+                  macros={recipe.macros}
+                  size={100}
+                  showLegend={true}
+                />
+              </View>
 
-            {/* Prep/Cook Time if available */}
-            {(recipe.prepTime || recipe.cookTime) && (
-              <View className="flex-row gap-4 mb-6">
-                {recipe.prepTime && (
-                  <View className="flex-1 bg-white rounded-xl p-4 items-center shadow-md">
-                    <Text className="text-2xl mb-1">⏱️</Text>
-                    <Text className="text-gray-500 text-sm">Prep Time</Text>
+              {/* Prep/Cook Time - takes ~40% */}
+              <View className="flex-[2] gap-3">
+                {recipe.prepTime ? (
+                  <View className="flex-1 bg-white rounded-xl p-3 items-center justify-center shadow-md">
+                    <Text className="text-xl mb-1">⏱️</Text>
+                    <Text className="text-gray-500 text-xs">Prep</Text>
                     <Text className="text-gray-900 font-semibold">
-                      {recipe.prepTime} min
+                      {recipe.prepTime}m
                     </Text>
                   </View>
-                )}
-                {recipe.cookTime !== undefined && recipe.cookTime > 0 && (
-                  <View className="flex-1 bg-white rounded-xl p-4 items-center shadow-md">
-                    <Text className="text-2xl mb-1">🍳</Text>
-                    <Text className="text-gray-500 text-sm">Cook Time</Text>
+                ) : null}
+                {recipe.cookTime !== undefined && recipe.cookTime > 0 ? (
+                  <View className="flex-1 bg-white rounded-xl p-3 items-center justify-center shadow-md">
+                    <Text className="text-xl mb-1">🍳</Text>
+                    <Text className="text-gray-500 text-xs">Cook</Text>
                     <Text className="text-gray-900 font-semibold">
-                      {recipe.cookTime} min
+                      {recipe.cookTime}m
                     </Text>
+                  </View>
+                ) : null}
+                {!recipe.prepTime && (!recipe.cookTime || recipe.cookTime === 0) && (
+                  <View className="flex-1 bg-white rounded-xl p-3 items-center justify-center shadow-md">
+                    <Text className="text-xl mb-1">⏱️</Text>
+                    <Text className="text-gray-400 text-xs">No time</Text>
+                    <Text className="text-gray-400 font-semibold">—</Text>
                   </View>
                 )}
               </View>
-            )}
+            </View>
 
             {/* Ingredients */}
             <View className="mb-6">
               <Text className="text-lg font-semibold text-gray-900 mb-3">
-                Ingredients {scaleFactor !== 1 && <Text className="text-sm font-normal text-gray-400">(scaled)</Text>}
+                Ingredients {multiplier !== 1 && <Text className="text-sm font-normal text-gray-400">({multiplier}x)</Text>}
               </Text>
               <View className="bg-white rounded-2xl overflow-hidden shadow-md">
                 {recipe.ingredients.map((ingredient, index) => (
@@ -238,7 +273,7 @@ export default function RecipeDetailScreen() {
                     <Text className="text-gray-800 flex-1">
                       {ingredient.name}
                     </Text>
-                    <Text className={`${scaleFactor !== 1 ? "text-orange-600 font-medium" : "text-gray-500"}`}>
+                    <Text className={`${multiplier !== 1 ? "text-orange-600 font-medium" : "text-gray-500"}`}>
                       {formatAmount(ingredient.amount)} {ingredient.unit}
                     </Text>
                   </View>

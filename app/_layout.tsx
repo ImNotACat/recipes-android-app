@@ -8,6 +8,7 @@ import { queryClient } from "../src/lib/queryClient";
 import { AuthProvider, useAuth } from "../src/providers/AuthProvider";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import * as SplashScreen from "expo-splash-screen";
+import { useFonts, Lobster_400Regular } from "@expo-google-fonts/lobster";
 
 // Prevent the splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
@@ -54,6 +55,14 @@ function RootLayoutNav() {
 }
 
 export default function RootLayout() {
+  const [fontsLoaded] = useFonts({
+    Lobster_400Regular,
+  });
+
+  if (!fontsLoaded) {
+    return null; // Splash screen stays visible while fonts load
+  }
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>

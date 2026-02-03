@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
@@ -12,6 +13,29 @@ export default function RecipeDetailScreen() {
   // Fetch recipe from database
   const { data: recipe, isLoading, error } = useRecipe(id || "");
   const deleteRecipe = useDeleteRecipe();
+  
+  // Scaling state
+  const [scaledServings, setScaledServings] = useState<number>(1);
+  
+  // Initialize scaled servings when recipe loads
+  useEffect(() => {
+    if (recipe?.servings) {
+      setScaledServings(recipe.servings);
+    }
+  }, [recipe?.servings]);
+  
+  // Calculate scale factor
+  const originalServings = recipe?.servings || 1;
+  const scaleFactor = scaledServings / originalServings;
+  
+  // Helper to format scaled amounts nicely
+  const formatAmount = (amount: number): string => {
+    const scaled = amount * scaleFactor;
+    if (scaled === Math.floor(scaled)) {
+      return scaled.toString();
+    }
+    return scaled.toFixed(1).replace(/\.0$/, '');
+  };
 
   const handleDelete = () => {
     if (!recipe) return;
@@ -107,18 +131,46 @@ export default function RecipeDetailScreen() {
 
           {/* Content */}
           <View className="px-6 py-6">
-            {/* Title & Servings */}
-            <View className="flex-row items-center justify-between mb-2">
-              <Text className="text-2xl font-bold text-gray-900 flex-1">
-                {recipe.name}
-              </Text>
-              {recipe.servings && (
-                <View className="flex-row items-center ml-3">
-                  <Text className="text-lg mr-1">🍽️</Text>
-                  <Text className="text-gray-500">{recipe.servings} servings</Text>
-                </View>
-              )}
+            {/* Title */}
+            <Text className="text-2xl font-bold text-gray-900 mb-2">
+              {recipe.name}
+            </Text>
+            
+            {/* Servings Adjuster */}
+            <View className="bg-gray-50 rounded-2xl p-4 mb-6 flex-row items-center justify-between">
+              <View className="flex-row items-center">
+                <Text className="text-lg mr-2">🍽️</Text>
+                <Text className="text-gray-700 font-medium">Servings</Text>
+              </View>
+              <View className="flex-row items-center gap-3">
+                <TouchableOpacity
+                  className="w-8 h-8 bg-white rounded-full items-center justify-center border border-gray-200"
+                  onPress={() => setScaledServings(Math.max(1, scaledServings - 1))}
+                >
+                  <Text className="text-gray-600 text-lg font-medium">−</Text>
+                </TouchableOpacity>
+                <Text className="text-xl font-semibold text-gray-900 w-8 text-center">
+                  {scaledServings}
+                </Text>
+                <TouchableOpacity
+                  className="w-8 h-8 bg-white rounded-full items-center justify-center border border-gray-200"
+                  onPress={() => setScaledServings(scaledServings + 1)}
+                >
+                  <Text className="text-gray-600 text-lg font-medium">+</Text>
+                </TouchableOpacity>
+              </View>
             </View>
+            
+            {/* Scale indicator */}
+            {scaleFactor !== 1 && (
+              <View className="flex-row items-center justify-center mb-4">
+                <View className="bg-orange-100 px-3 py-1 rounded-full">
+                  <Text className="text-orange-600 text-sm">
+                    Scaled from {originalServings} to {scaledServings} servings ({scaleFactor.toFixed(1)}x)
+                  </Text>
+                </View>
+              </View>
+            )}
 
             {/* Tags */}
             <View className="flex-row flex-wrap gap-2 mb-6">
@@ -137,7 +189,7 @@ export default function RecipeDetailScreen() {
             {/* Macro Wheel */}
             <View className="bg-gray-50 rounded-2xl p-5 mb-6">
               <Text className="text-lg font-semibold text-gray-900 mb-4">
-                Nutrition Facts
+                Nutrition Facts <Text className="text-sm font-normal text-gray-400">(per serving)</Text>
               </Text>
               <MacroWheel
                 macros={recipe.macros}
@@ -173,7 +225,7 @@ export default function RecipeDetailScreen() {
             {/* Ingredients */}
             <View className="mb-6">
               <Text className="text-lg font-semibold text-gray-900 mb-3">
-                Ingredients
+                Ingredients {scaleFactor !== 1 && <Text className="text-sm font-normal text-gray-400">(scaled)</Text>}
               </Text>
               <View className="bg-gray-50 rounded-2xl overflow-hidden">
                 {recipe.ingredients.map((ingredient, index) => (
@@ -186,8 +238,8 @@ export default function RecipeDetailScreen() {
                     <Text className="text-gray-800 flex-1">
                       {ingredient.name}
                     </Text>
-                    <Text className="text-gray-500">
-                      {ingredient.amount} {ingredient.unit}
+                    <Text className={`${scaleFactor !== 1 ? "text-orange-600 font-medium" : "text-gray-500"}`}>
+                      {formatAmount(ingredient.amount)} {ingredient.unit}
                     </Text>
                   </View>
                 ))}

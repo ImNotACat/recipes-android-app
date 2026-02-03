@@ -1,6 +1,6 @@
-# RecipesApp
+# Plateful
 
-A React Native mobile app built with Expo, featuring Google OAuth authentication via Supabase.
+A family recipe app built with React Native and Expo, featuring Google OAuth authentication via Supabase.
 
 ## Tech Stack
 
@@ -14,7 +14,7 @@ A React Native mobile app built with Expo, featuring Google OAuth authentication
 ## Project Structure
 
 ```
-RecipesApp/
+Plateful/
 ├── app/                      # Expo Router pages
 │   ├── _layout.tsx           # Root layout (providers)
 │   ├── index.tsx             # Entry redirect based on auth
@@ -68,7 +68,7 @@ In your Supabase dashboard:
 1. Go to **Authentication** > **Providers** > **Google**
 2. Enable Google provider
 3. Add your Google OAuth credentials (Client ID and Secret)
-4. Add the redirect URL: `recipesapp://auth/callback`
+4. Add the redirect URL: `plateful://auth/callback`
 
 ### 4. Run the App
 
@@ -145,8 +145,8 @@ Now that authentication is set up, you can:
 
 ### OAuth not working on mobile?
 
-- Make sure the app scheme `recipesapp` is configured in `app.json`
-- Verify the redirect URL in Supabase matches: `recipesapp://auth/callback`
+- Make sure the app scheme `plateful` is configured in `app.json`
+- Verify the redirect URL in Supabase matches: `plateful://auth/callback`
 
 ### Styles not applying?
 

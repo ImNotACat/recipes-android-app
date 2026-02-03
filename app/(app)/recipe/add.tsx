@@ -16,11 +16,14 @@ import { Stack, useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { Ingredient, calculateCalories } from "../../../src/types/recipe";
 import { useCreateRecipe, useTags } from "../../../src/hooks/useRecipes";
+import { useHousehold } from "../../../src/hooks/useHousehold";
 
 export default function AddRecipeScreen() {
   const router = useRouter();
   const createRecipe = useCreateRecipe();
   const { data: existingTags = [] } = useTags();
+  const { data: household } = useHousehold();
+  const [shareWithHousehold, setShareWithHousehold] = useState(true); // Default to sharing
   
   // Form state
   const [name, setName] = useState("");
@@ -166,6 +169,7 @@ export default function AddRecipeScreen() {
         prepTime: parseInt(prepTime) || undefined,
         cookTime: parseInt(cookTime) || undefined,
         ingredients: ingredients.filter((ing) => ing.name.trim()),
+        householdId: shareWithHousehold && household ? household.id : null,
       });
 
       Alert.alert(
@@ -473,6 +477,27 @@ export default function AddRecipeScreen() {
                 textAlignVertical="top"
               />
             </View>
+
+            {/* Share with Household Toggle */}
+            {household && (
+              <TouchableOpacity 
+                className="flex-row items-center justify-between bg-gray-50 rounded-xl p-4 mt-4 border border-gray-100"
+                onPress={() => setShareWithHousehold(!shareWithHousehold)}
+              >
+                <View className="flex-row items-center flex-1">
+                  <Text className="text-lg mr-2">👨‍👩‍👧‍👦</Text>
+                  <View>
+                    <Text className="text-gray-900 font-medium">Share with {household.name}</Text>
+                    <Text className="text-gray-400 text-sm">
+                      {shareWithHousehold ? "Visible to household members" : "Only visible to you"}
+                    </Text>
+                  </View>
+                </View>
+                <View className={`w-12 h-7 rounded-full ${shareWithHousehold ? 'bg-primary-500' : 'bg-gray-300'} justify-center px-1`}>
+                  <View className={`w-5 h-5 rounded-full bg-white ${shareWithHousehold ? 'self-end' : 'self-start'}`} />
+                </View>
+              </TouchableOpacity>
+            )}
 
             {/* Bottom spacing */}
             <View className="h-8" />

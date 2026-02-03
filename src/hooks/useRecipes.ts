@@ -6,6 +6,7 @@ import { Recipe, Ingredient, Macros, calculateCalories } from "../types/recipe";
 interface RecipeRow {
   id: string;
   user_id: string;
+  household_id: string | null;
   name: string;
   instructions: string | null;
   image_url: string | null;
@@ -40,10 +41,11 @@ export interface CreateRecipeInput {
   prepTime?: number;
   cookTime?: number;
   ingredients: Ingredient[];
+  householdId?: string | null; // null = private, string = shared with household
 }
 
 // Transform database row to app Recipe type
-function transformRecipe(row: RecipeRow, ingredients: IngredientRow[]): Recipe {
+function transformRecipe(row: RecipeRow, ingredients: IngredientRow[], currentUserId?: string): Recipe {
   const macros = {
     carbs: row.carbs,
     protein: row.protein,
@@ -69,6 +71,8 @@ function transformRecipe(row: RecipeRow, ingredients: IngredientRow[]): Recipe {
       amount: ing.amount,
       unit: ing.unit,
     })),
+    householdId: row.household_id,
+    isOwner: currentUserId ? row.user_id === currentUserId : true,
   };
 }
 
@@ -108,7 +112,7 @@ async function uploadImage(uri: string, userId: string): Promise<string | null> 
   }
 }
 
-// Fetch all recipes for the current user
+// Fetch all recipes for the current user (own + household)
 export function useRecipes() {
   return useQuery({
     queryKey: ["recipes"],
@@ -117,17 +121,38 @@ export function useRecipes() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      // Fetch recipes
-      const { data: recipes, error: recipesError } = await supabase
+      // Get user's household (if any)
+      const { data: membership } = await supabase
+        .from("household_members")
+        .select("household_id")
+        .eq("user_id", user.id)
+        .single();
+
+      // Build query - fetch own recipes + household recipes
+      let query = supabase
         .from("recipes")
         .select("*")
-        .eq("user_id", user.id)
         .order("created_at", { ascending: false });
+
+      if (membership?.household_id) {
+        // User is in a household - get own recipes OR household recipes
+        query = query.or(`user_id.eq.${user.id},household_id.eq.${membership.household_id}`);
+      } else {
+        // User not in household - only get own recipes
+        query = query.eq("user_id", user.id);
+      }
+
+      const { data: recipes, error: recipesError } = await query;
 
       if (recipesError) throw recipesError;
 
       // Fetch all ingredients for these recipes
       const recipeIds = recipes.map((r) => r.id);
+      
+      if (recipeIds.length === 0) {
+        return [];
+      }
+
       const { data: ingredients, error: ingredientsError } = await supabase
         .from("ingredients")
         .select("*")
@@ -144,7 +169,7 @@ export function useRecipes() {
 
       // Transform to app format
       return recipes.map((recipe) =>
-        transformRecipe(recipe, ingredientsByRecipe[recipe.id] || [])
+        transformRecipe(recipe, ingredientsByRecipe[recipe.id] || [], user.id)
       );
     },
   });
@@ -155,6 +180,8 @@ export function useRecipe(id: string) {
   return useQuery({
     queryKey: ["recipe", id],
     queryFn: async (): Promise<Recipe | null> => {
+      const { data: { user } } = await supabase.auth.getUser();
+      
       const { data: recipe, error: recipeError } = await supabase
         .from("recipes")
         .select("*")
@@ -173,7 +200,7 @@ export function useRecipe(id: string) {
 
       if (ingredientsError) throw ingredientsError;
 
-      return transformRecipe(recipe, ingredients || []);
+      return transformRecipe(recipe, ingredients || [], user?.id);
     },
     enabled: !!id,
   });
@@ -203,6 +230,7 @@ export function useCreateRecipe() {
         .from("recipes")
         .insert({
           user_id: user.id,
+          household_id: input.householdId || null,
           name: input.name,
           instructions: input.instructions || null,
           image_url: imageUrl,
@@ -314,6 +342,7 @@ export function useUpdateRecipe() {
           servings: input.servings || null,
           prep_time: input.prepTime || null,
           cook_time: input.cookTime || null,
+          household_id: input.householdId || null,
           updated_at: new Date().toISOString(),
         })
         .eq("id", id)

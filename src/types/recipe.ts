@@ -27,6 +27,8 @@ export interface Recipe {
   servings?: number;
   prepTime?: number;  // minutes
   cookTime?: number;  // minutes
+  householdId?: string | null;  // null = private
+  isOwner?: boolean;  // true if current user created this recipe
 }
 
 // Sample data for development

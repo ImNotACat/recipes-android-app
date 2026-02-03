@@ -18,13 +18,55 @@ export default function HomeScreen() {
   // Fetch recipes and tags from database
   const { data: recipes, isLoading, error, refetch, isRefetching } = useRecipes();
   const { data: tags = [] } = useTags();
-  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCalorieRanges, setSelectedCalorieRanges] = useState<number[]>([]);
 
-  // Filter recipes by search and selected tag
+  const toggleTag = (tag: string) => {
+    setSelectedTags((prev) =>
+      prev.includes(tag)
+        ? prev.filter((t) => t !== tag)
+        : [...prev, tag]
+    );
+  };
+
+  const clearAllTags = () => {
+    setSelectedTags([]);
+  };
+
+  // Calorie range options
+  const calorieRanges = [200, 300, 400, 500, 600, 700];
+
+  const toggleCalorieRange = (range: number) => {
+    setSelectedCalorieRanges((prev) =>
+      prev.includes(range)
+        ? prev.filter((r) => r !== range)
+        : [...prev, range]
+    );
+  };
+
+  // Check if recipe calories fall within any selected range (±50 calories)
+  const isInCalorieRange = (calories: number | undefined): boolean => {
+    if (selectedCalorieRanges.length === 0) return true;
+    if (!calories) return false;
+    
+    return selectedCalorieRanges.some((range) => 
+      calories >= range - 50 && calories <= range + 50
+    );
+  };
+
+  // Filter recipes by search, selected tags, and calorie range
   const filteredRecipes = recipes?.filter((recipe) => {
-    // Tag filter
-    if (selectedTag && !recipe.tags.includes(selectedTag)) {
+    // Tag filter - recipe must have at least one of the selected tags
+    if (selectedTags.length > 0) {
+      const hasMatchingTag = selectedTags.some((selectedTag) =>
+        recipe.tags.some((recipeTag) => recipeTag.toLowerCase() === selectedTag.toLowerCase())
+      );
+      if (!hasMatchingTag) return false;
+    }
+
+    // Calorie range filter
+    if (!isInCalorieRange(recipe.macros.calories)) {
       return false;
     }
     
@@ -70,8 +112,7 @@ export default function HomeScreen() {
 
   const handleSettings = () => {
     setShowProfileMenu(false);
-    // TODO: Navigate to settings screen
-    Alert.alert("Settings", "Settings page coming soon!");
+    router.push("/settings");
   };
 
   const firstName = user?.user_metadata?.full_name?.split(" ")[0] || "there";
@@ -100,8 +141,11 @@ export default function HomeScreen() {
           <View className="px-6 pt-4 pb-6">
             <View className="flex-row items-center justify-between">
               <View className="flex-1">
-                <Text className="text-3xl font-bold text-gray-900 italic">
-                  Recipes
+                <Text 
+                  className="text-primary-500"
+                  style={{ fontFamily: 'Lobster_400Regular', fontSize: 32 }}
+                >
+                  Plateful
                 </Text>
                 <Text className="text-gray-400 mt-1">
                   Hello, {firstName}!
@@ -196,43 +240,111 @@ export default function HomeScreen() {
             </View>
           </View>
 
-          {/* Category Pills */}
-          {tags.length > 0 && (
-            <ScrollView 
-              horizontal 
-              showsHorizontalScrollIndicator={false}
-              className="px-6 mb-6"
-              contentContainerClassName="gap-3"
-            >
+          {/* Main Category Pills (fixed) */}
+          <View className="px-6 mb-3">
+            <View className="flex-row gap-2 items-center">
               <TouchableOpacity 
-                className={`px-5 py-2 rounded-full ${
-                  selectedTag === null 
+                className={`px-3 py-2 rounded-full ${
+                  selectedTags.length === 0 
                     ? "bg-primary-500" 
                     : "bg-gray-50 border border-gray-200"
                 }`}
-                onPress={() => setSelectedTag(null)}
+                onPress={clearAllTags}
               >
-                <Text className={`font-medium ${
-                  selectedTag === null ? "text-white" : "text-gray-700"
+                <Text className={`text-sm font-medium ${
+                  selectedTags.length === 0 ? "text-white" : "text-gray-700"
                 }`}>All</Text>
               </TouchableOpacity>
-              {tags.map((tag) => (
-                <TouchableOpacity 
-                  key={tag}
-                  className={`px-5 py-2 rounded-full ${
-                    selectedTag === tag 
-                      ? "bg-primary-500" 
-                      : "bg-gray-50 border border-gray-200"
-                  }`}
-                  onPress={() => setSelectedTag(tag)}
-                >
-                  <Text className={`font-medium ${
-                    selectedTag === tag ? "text-white" : "text-gray-700"
-                  }`}>{tag}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          )}
+              {["Breakfast", "Lunch", "Snack", "Dinner"].map((category) => {
+                const isSelected = selectedTags.some((t) => t.toLowerCase() === category.toLowerCase());
+                return (
+                  <TouchableOpacity 
+                    key={category}
+                    className={`px-3 py-2 rounded-full ${
+                      isSelected 
+                        ? "bg-primary-500" 
+                        : "bg-gray-50 border border-gray-200"
+                    }`}
+                    onPress={() => toggleTag(category)}
+                  >
+                    <Text className={`text-sm font-medium ${
+                      isSelected ? "text-white" : "text-gray-700"
+                    }`}>{category}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+
+          {/* Other Tags (scrollable) */}
+          {(() => {
+            const mainCategories = ["Breakfast", "Lunch", "Snack", "Dinner"];
+            const otherTags = tags.filter((tag) => 
+              !mainCategories.some((cat) => cat.toLowerCase() === tag.toLowerCase())
+            );
+            
+            if (otherTags.length === 0) return null;
+            
+            return (
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false}
+                className="px-6 mb-3"
+                contentContainerClassName="gap-2"
+              >
+                {otherTags.map((tag) => {
+                  const isSelected = selectedTags.some((t) => t.toLowerCase() === tag.toLowerCase());
+                  return (
+                    <TouchableOpacity 
+                      key={tag}
+                      className={`px-4 py-1.5 rounded-full ${
+                        isSelected 
+                          ? "bg-primary-500" 
+                          : "bg-gray-50 border border-gray-200"
+                      }`}
+                      onPress={() => toggleTag(tag)}
+                    >
+                      <Text className={`text-sm font-medium ${
+                        isSelected ? "text-white" : "text-gray-700"
+                      }`}>{tag}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            );
+          })()}
+
+          {/* Calorie Range Filter Pills */}
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            className="px-6 mb-6"
+            contentContainerClassName="gap-2"
+          >
+            {calorieRanges.map((range) => (
+              <TouchableOpacity 
+                key={range}
+                className={`px-4 py-1.5 rounded-full ${
+                  selectedCalorieRanges.includes(range) 
+                    ? "bg-orange-500" 
+                    : "bg-gray-50 border border-gray-200"
+                }`}
+                onPress={() => toggleCalorieRange(range)}
+              >
+                <Text className={`text-sm font-medium ${
+                  selectedCalorieRanges.includes(range) ? "text-white" : "text-gray-600"
+                }`}>{range} cal</Text>
+              </TouchableOpacity>
+            ))}
+            {selectedCalorieRanges.length > 0 && (
+              <TouchableOpacity 
+                className="px-3 py-1.5"
+                onPress={() => setSelectedCalorieRanges([])}
+              >
+                <Text className="text-gray-400 text-sm">Clear</Text>
+              </TouchableOpacity>
+            )}
+          </ScrollView>
 
           {/* Recipe Cards */}
           <View className="px-6">
@@ -255,12 +367,30 @@ export default function HomeScreen() {
                     className="w-[48%] bg-white rounded-2xl mb-4 border border-gray-100 overflow-hidden active:opacity-80"
                     onPress={() => router.push(`/recipe/${recipe.id}`)}
                   >
-                    <RecipeImage imageUrl={recipe.imageUrl} size="small" />
+                    <View className="relative">
+                      <RecipeImage imageUrl={recipe.imageUrl} size="small" />
+                      {recipe.householdId && (
+                        <View className="absolute top-2 right-2 bg-white/90 rounded-full px-2 py-0.5">
+                          <Text className="text-xs">👨‍👩‍👧‍👦</Text>
+                        </View>
+                      )}
+                    </View>
                     <View className="p-3">
                       <Text className="font-semibold text-gray-900">{recipe.name}</Text>
-                      <Text className="text-gray-400 text-sm mb-2">
-                        {recipe.tags[0] || "Uncategorized"}
-                      </Text>
+                      {recipe.tags.length > 0 ? (
+                        <View className="flex-row flex-wrap gap-1 mb-2 mt-1">
+                          {recipe.tags.map((tag, index) => (
+                            <View 
+                              key={index}
+                              className="bg-gray-100 px-2 py-0.5 rounded-full"
+                            >
+                              <Text className="text-gray-500 text-xs">{tag}</Text>
+                            </View>
+                          ))}
+                        </View>
+                      ) : (
+                        <Text className="text-gray-400 text-sm mb-2">Uncategorized</Text>
+                      )}
                       <MacroBar 
                         macros={recipe.macros}
                         height={4}
@@ -280,11 +410,15 @@ export default function HomeScreen() {
                       Try a different search term
                     </Text>
                   </>
-                ) : selectedTag ? (
+                ) : selectedTags.length > 0 || selectedCalorieRanges.length > 0 ? (
                   <>
-                    <Text className="text-gray-900 font-semibold text-lg">No "{selectedTag}" recipes</Text>
-                    <Text className="text-gray-400 text-center mt-1">
-                      Try selecting a different tag or add a new recipe!
+                    <Text className="text-gray-900 font-semibold text-lg">No matching recipes</Text>
+                    <Text className="text-gray-400 text-center mt-1 px-8">
+                      {selectedTags.length > 0 && selectedCalorieRanges.length > 0
+                        ? `No recipes matching selected tags and calorie range`
+                        : selectedTags.length > 0
+                        ? `No recipes found with selected tags`
+                        : "No recipes in the selected calorie range"}
                     </Text>
                   </>
                 ) : (

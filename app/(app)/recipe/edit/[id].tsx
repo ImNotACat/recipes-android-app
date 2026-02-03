@@ -16,6 +16,7 @@ import { Stack, useRouter, useLocalSearchParams } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { Ingredient, calculateCalories } from "../../../../src/types/recipe";
 import { useRecipe, useUpdateRecipe, useTags } from "../../../../src/hooks/useRecipes";
+import { useHousehold } from "../../../../src/hooks/useHousehold";
 
 export default function EditRecipeScreen() {
   const router = useRouter();
@@ -23,6 +24,7 @@ export default function EditRecipeScreen() {
   const { data: recipe, isLoading: isLoadingRecipe } = useRecipe(id || "");
   const updateRecipe = useUpdateRecipe();
   const { data: existingTags = [] } = useTags();
+  const { data: household } = useHousehold();
   
   // Form state
   const [name, setName] = useState("");
@@ -40,6 +42,7 @@ export default function EditRecipeScreen() {
   const [ingredients, setIngredients] = useState<Ingredient[]>([
     { name: "", amount: 0, unit: "" }
   ]);
+  const [shareWithHousehold, setShareWithHousehold] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
   // Load recipe data into form
@@ -61,6 +64,7 @@ export default function EditRecipeScreen() {
           ? recipe.ingredients 
           : [{ name: "", amount: 0, unit: "" }]
       );
+      setShareWithHousehold(!!recipe.householdId);
       setIsInitialized(true);
     }
   }, [recipe, isInitialized]);
@@ -186,6 +190,7 @@ export default function EditRecipeScreen() {
           prepTime: parseInt(prepTime) || undefined,
           cookTime: parseInt(cookTime) || undefined,
           ingredients: ingredients.filter((ing) => ing.name.trim()),
+          householdId: shareWithHousehold && household ? household.id : null,
         },
       });
 
@@ -497,6 +502,27 @@ export default function EditRecipeScreen() {
                 textAlignVertical="top"
               />
             </View>
+
+            {/* Share with Household Toggle */}
+            {household && recipe?.isOwner && (
+              <TouchableOpacity 
+                className="flex-row items-center justify-between bg-gray-50 rounded-xl p-4 mt-4 border border-gray-100"
+                onPress={() => setShareWithHousehold(!shareWithHousehold)}
+              >
+                <View className="flex-row items-center flex-1">
+                  <Text className="text-lg mr-2">👨‍👩‍👧‍👦</Text>
+                  <View>
+                    <Text className="text-gray-900 font-medium">Share with {household.name}</Text>
+                    <Text className="text-gray-400 text-sm">
+                      {shareWithHousehold ? "Visible to household members" : "Only visible to you"}
+                    </Text>
+                  </View>
+                </View>
+                <View className={`w-12 h-7 rounded-full ${shareWithHousehold ? 'bg-primary-500' : 'bg-gray-300'} justify-center px-1`}>
+                  <View className={`w-5 h-5 rounded-full bg-white ${shareWithHousehold ? 'self-end' : 'self-start'}`} />
+                </View>
+              </TouchableOpacity>
+            )}
 
             {/* Bottom spacing */}
             <View className="h-8" />

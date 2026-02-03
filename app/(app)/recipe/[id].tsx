@@ -73,7 +73,7 @@ export default function RecipeDetailScreen() {
       />
       <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
         <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-          {/* Header with back and delete buttons */}
+          {/* Header with back, edit, and delete buttons */}
           <View className="absolute top-4 left-4 right-4 z-10 flex-row justify-between">
             <TouchableOpacity
               className="w-10 h-10 bg-white/90 rounded-full items-center justify-center shadow-sm"
@@ -81,17 +81,25 @@ export default function RecipeDetailScreen() {
             >
               <Text className="text-lg">←</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              className="w-10 h-10 bg-white/90 rounded-full items-center justify-center shadow-sm"
-              onPress={handleDelete}
-              disabled={deleteRecipe.isPending}
-            >
-              {deleteRecipe.isPending ? (
-                <ActivityIndicator size="small" color="#EA4335" />
-              ) : (
-                <Text className="text-lg">🗑️</Text>
-              )}
-            </TouchableOpacity>
+            <View className="flex-row gap-2">
+              <TouchableOpacity
+                className="w-10 h-10 bg-white/90 rounded-full items-center justify-center shadow-sm"
+                onPress={() => router.push(`/recipe/edit/${id}`)}
+              >
+                <Text className="text-lg">✏️</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                className="w-10 h-10 bg-white/90 rounded-full items-center justify-center shadow-sm"
+                onPress={handleDelete}
+                disabled={deleteRecipe.isPending}
+              >
+                {deleteRecipe.isPending ? (
+                  <ActivityIndicator size="small" color="#EA4335" />
+                ) : (
+                  <Text className="text-lg">🗑️</Text>
+                )}
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* Recipe Image */}

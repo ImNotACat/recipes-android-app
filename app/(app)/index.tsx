@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, Alert, ScrollView, TouchableOpacity, Modal, Pressable, Image, ActivityIndicator, RefreshControl } from "react-native";
+import { View, Text, Alert, ScrollView, TouchableOpacity, Modal, Pressable, Image, ActivityIndicator, RefreshControl, TextInput } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useRouter } from "expo-router";
 import { useAuth } from "../../src/providers/AuthProvider";
@@ -19,11 +19,28 @@ export default function HomeScreen() {
   const { data: recipes, isLoading, error, refetch, isRefetching } = useRecipes();
   const { data: tags = [] } = useTags();
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  // Filter recipes by selected tag
-  const filteredRecipes = selectedTag
-    ? recipes?.filter((r) => r.tags.includes(selectedTag))
-    : recipes;
+  // Filter recipes by search and selected tag
+  const filteredRecipes = recipes?.filter((recipe) => {
+    // Tag filter
+    if (selectedTag && !recipe.tags.includes(selectedTag)) {
+      return false;
+    }
+    
+    // Search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      const matchesName = recipe.name.toLowerCase().includes(query);
+      const matchesTags = recipe.tags.some((tag) => tag.toLowerCase().includes(query));
+      const matchesIngredients = recipe.ingredients.some((ing) => 
+        ing.name.toLowerCase().includes(query)
+      );
+      return matchesName || matchesTags || matchesIngredients;
+    }
+    
+    return true;
+  });
 
   const handleSignOut = async () => {
     setShowProfileMenu(false);
@@ -155,7 +172,20 @@ export default function HomeScreen() {
             <View className="mt-6 flex-row items-center gap-3">
               <View className="flex-1 flex-row items-center bg-gray-50 rounded-full px-4 py-3 border border-gray-100">
                 <Text className="text-gray-400 mr-2">🔍</Text>
-                <Text className="text-gray-400">Search recipes...</Text>
+                <TextInput
+                  className="flex-1 text-gray-900"
+                  placeholder="Search recipes..."
+                  placeholderTextColor="#9CA3AF"
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                  returnKeyType="search"
+                  autoCorrect={false}
+                />
+                {searchQuery.length > 0 && (
+                  <TouchableOpacity onPress={() => setSearchQuery("")}>
+                    <Text className="text-gray-400 text-lg">✕</Text>
+                  </TouchableOpacity>
+                )}
               </View>
               <TouchableOpacity 
                 className="w-12 h-12 bg-primary-500 rounded-full items-center justify-center"
@@ -243,7 +273,14 @@ export default function HomeScreen() {
             ) : (
               <View className="items-center py-12">
                 <Text className="text-5xl mb-3">🍽️</Text>
-                {selectedTag ? (
+                {searchQuery.trim() ? (
+                  <>
+                    <Text className="text-gray-900 font-semibold text-lg">No results for "{searchQuery}"</Text>
+                    <Text className="text-gray-400 text-center mt-1">
+                      Try a different search term
+                    </Text>
+                  </>
+                ) : selectedTag ? (
                   <>
                     <Text className="text-gray-900 font-semibold text-lg">No "{selectedTag}" recipes</Text>
                     <Text className="text-gray-400 text-center mt-1">

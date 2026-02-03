@@ -274,6 +274,88 @@ export function useTags() {
   });
 }
 
+// Update a recipe
+export function useUpdateRecipe() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, input }: { id: string; input: CreateRecipeInput }): Promise<Recipe> => {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      // Upload new image if provided and it's a local URI (not already a URL)
+      let imageUrl: string | null = null;
+      if (input.imageUri) {
+        if (input.imageUri.startsWith("http")) {
+          // Keep existing URL
+          imageUrl = input.imageUri;
+        } else {
+          // Upload new image
+          imageUrl = await uploadImage(input.imageUri, user.id);
+        }
+      }
+
+      // Calculate calories if not provided
+      const calories = input.macros.calories ?? calculateCalories(input.macros);
+
+      // Update recipe
+      const { data: recipe, error: recipeError } = await supabase
+        .from("recipes")
+        .update({
+          name: input.name,
+          instructions: input.instructions || null,
+          image_url: imageUrl,
+          tags: input.tags,
+          carbs: input.macros.carbs,
+          protein: input.macros.protein,
+          fat: input.macros.fat,
+          calories: calories,
+          servings: input.servings || null,
+          prep_time: input.prepTime || null,
+          cook_time: input.cookTime || null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", id)
+        .eq("user_id", user.id)
+        .select()
+        .single();
+
+      if (recipeError) throw recipeError;
+
+      // Delete existing ingredients and insert new ones
+      await supabase.from("ingredients").delete().eq("recipe_id", id);
+
+      const ingredientsToInsert = input.ingredients
+        .filter((ing) => ing.name.trim())
+        .map((ing) => ({
+          recipe_id: id,
+          name: ing.name,
+          amount: ing.amount,
+          unit: ing.unit,
+        }));
+
+      if (ingredientsToInsert.length > 0) {
+        const { error: ingredientsError } = await supabase
+          .from("ingredients")
+          .insert(ingredientsToInsert);
+
+        if (ingredientsError) throw ingredientsError;
+      }
+
+      return transformRecipe(recipe, ingredientsToInsert.map((ing, i) => ({
+        ...ing,
+        id: `temp-${i}`,
+      })));
+    },
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ["recipes"] });
+      queryClient.invalidateQueries({ queryKey: ["recipe", id] });
+      queryClient.invalidateQueries({ queryKey: ["tags"] });
+    },
+  });
+}
+
 // Delete a recipe
 export function useDeleteRecipe() {
   const queryClient = useQueryClient();

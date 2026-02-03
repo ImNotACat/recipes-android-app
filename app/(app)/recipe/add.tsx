@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { 
   View, 
   Text, 
@@ -9,14 +9,21 @@ import {
   KeyboardAvoidingView,
   Platform,
   Image,
-  ActivityIndicator
+  ActivityIndicator,
+  Modal,
+  Pressable,
+  Animated,
+  Dimensions
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
+import ConfettiCannon from "react-native-confetti-cannon";
 import { Ingredient, calculateCalories } from "../../../src/types/recipe";
 import { useCreateRecipe, useTags } from "../../../src/hooks/useRecipes";
 import { useHousehold } from "../../../src/hooks/useHousehold";
+
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export default function AddRecipeScreen() {
   const router = useRouter();
@@ -34,8 +41,12 @@ export default function AddRecipeScreen() {
   const [servings, setServings] = useState("");
   const [instructions, setInstructions] = useState("");
   const [image, setImage] = useState<string | null>(null);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const pickImage = async () => {
+    setShowImageModal(false);
     // Ask for permission
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     
@@ -58,6 +69,7 @@ export default function AddRecipeScreen() {
   };
 
   const takePhoto = async () => {
+    setShowImageModal(false);
     // Ask for permission
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     
@@ -79,15 +91,7 @@ export default function AddRecipeScreen() {
   };
 
   const showImageOptions = () => {
-    Alert.alert(
-      "Add Photo",
-      "Choose an option",
-      [
-        { text: "Take Photo", onPress: takePhoto },
-        { text: "Choose from Library", onPress: pickImage },
-        { text: "Cancel", style: "cancel" },
-      ]
-    );
+    setShowImageModal(true);
   };
 
   const toggleTag = (tag: string) => {
@@ -172,11 +176,18 @@ export default function AddRecipeScreen() {
         householdId: shareWithHousehold && household ? household.id : null,
       });
 
-      Alert.alert(
-        "Recipe Added!",
-        `"${name}" has been saved.`,
-        [{ text: "OK", onPress: () => router.back() }]
-      );
+      // Show success animation with confetti
+      setShowSuccess(true);
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+      
+      // Navigate back after delay
+      setTimeout(() => {
+        router.back();
+      }, 2500);
     } catch (error) {
       console.error("Error saving recipe:", error);
       Alert.alert(
@@ -195,6 +206,51 @@ export default function AddRecipeScreen() {
           gestureDirection: "horizontal",
         }}
       />
+      
+      {/* Image Options Modal */}
+      <Modal
+        visible={showImageModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowImageModal(false)}
+      >
+        <Pressable 
+          className="flex-1 bg-black/50 justify-end"
+          onPress={() => setShowImageModal(false)}
+        >
+          <Pressable 
+            className="bg-white rounded-t-3xl px-6 pb-8 pt-4"
+            onPress={(e) => e.stopPropagation()}
+          >
+            <View className="w-12 h-1 bg-gray-300 rounded-full self-center mb-4" />
+            <Text className="text-lg font-semibold text-gray-900 text-center mb-4">Add Photo</Text>
+            
+            <TouchableOpacity
+              className="bg-gray-50 rounded-xl py-4 px-4 mb-3 flex-row items-center"
+              onPress={takePhoto}
+            >
+              <Text className="text-2xl mr-3">📸</Text>
+              <Text className="text-gray-900 font-medium">Take Photo</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              className="bg-gray-50 rounded-xl py-4 px-4 mb-3 flex-row items-center"
+              onPress={pickImage}
+            >
+              <Text className="text-2xl mr-3">🖼️</Text>
+              <Text className="text-gray-900 font-medium">Choose from Library</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              className="py-4 px-4"
+              onPress={() => setShowImageModal(false)}
+            >
+              <Text className="text-gray-500 font-medium text-center">Cancel</Text>
+            </TouchableOpacity>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
       <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
         <KeyboardAvoidingView 
           behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -504,6 +560,25 @@ export default function AddRecipeScreen() {
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
+
+      {/* Success Overlay with Confetti */}
+      {showSuccess && (
+        <Animated.View 
+          style={{ opacity: fadeAnim }}
+          className="absolute inset-0 bg-white/95 items-center justify-center z-50"
+        >
+          <ConfettiCannon
+            count={200}
+            origin={{ x: Dimensions.get("window").width / 2, y: -10 }}
+            autoStart={true}
+            fadeOut
+            fallSpeed={2500}
+            explosionSpeed={400}
+            colors={['#EA4335', '#FBBC05', '#34A853', '#4285F4', '#FF6B6B', '#FFB347', '#E91E63', '#9C27B0']}
+          />
+          <Text className="text-3xl font-bold text-gray-900">Recipe Added!</Text>
+        </Animated.View>
+      )}
     </>
   );
 }

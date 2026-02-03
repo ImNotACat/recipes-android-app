@@ -130,14 +130,14 @@ export default function RecipeDetailScreen() {
           <RecipeImage imageUrl={recipe.imageUrl} size="large" />
 
           {/* Content */}
-          <View className="px-6 py-6">
+          <View className="px-6 py-6 bg-gray-50">
             {/* Title */}
             <Text className="text-2xl font-bold text-gray-900 mb-2">
               {recipe.name}
             </Text>
             
             {/* Servings Adjuster */}
-            <View className="bg-gray-50 rounded-2xl p-4 mb-6 flex-row items-center justify-between">
+            <View className="bg-white rounded-2xl p-4 mb-6 flex-row items-center justify-between shadow-md">
               <View className="flex-row items-center">
                 <Text className="text-lg mr-2">🍽️</Text>
                 <Text className="text-gray-700 font-medium">Servings</Text>
@@ -187,7 +187,7 @@ export default function RecipeDetailScreen() {
             </View>
 
             {/* Macro Wheel */}
-            <View className="bg-gray-50 rounded-2xl p-5 mb-6">
+            <View className="bg-white rounded-2xl p-5 mb-6 shadow-md">
               <Text className="text-lg font-semibold text-gray-900 mb-4">
                 Nutrition Facts <Text className="text-sm font-normal text-gray-400">(per serving)</Text>
               </Text>
@@ -202,7 +202,7 @@ export default function RecipeDetailScreen() {
             {(recipe.prepTime || recipe.cookTime) && (
               <View className="flex-row gap-4 mb-6">
                 {recipe.prepTime && (
-                  <View className="flex-1 bg-gray-50 rounded-xl p-4 items-center">
+                  <View className="flex-1 bg-white rounded-xl p-4 items-center shadow-md">
                     <Text className="text-2xl mb-1">⏱️</Text>
                     <Text className="text-gray-500 text-sm">Prep Time</Text>
                     <Text className="text-gray-900 font-semibold">
@@ -211,7 +211,7 @@ export default function RecipeDetailScreen() {
                   </View>
                 )}
                 {recipe.cookTime !== undefined && recipe.cookTime > 0 && (
-                  <View className="flex-1 bg-gray-50 rounded-xl p-4 items-center">
+                  <View className="flex-1 bg-white rounded-xl p-4 items-center shadow-md">
                     <Text className="text-2xl mb-1">🍳</Text>
                     <Text className="text-gray-500 text-sm">Cook Time</Text>
                     <Text className="text-gray-900 font-semibold">
@@ -227,7 +227,7 @@ export default function RecipeDetailScreen() {
               <Text className="text-lg font-semibold text-gray-900 mb-3">
                 Ingredients {scaleFactor !== 1 && <Text className="text-sm font-normal text-gray-400">(scaled)</Text>}
               </Text>
-              <View className="bg-gray-50 rounded-2xl overflow-hidden">
+              <View className="bg-white rounded-2xl overflow-hidden shadow-md">
                 {recipe.ingredients.map((ingredient, index) => (
                   <View
                     key={index}
@@ -252,7 +252,7 @@ export default function RecipeDetailScreen() {
                 <Text className="text-lg font-semibold text-gray-900 mb-3">
                   Instructions
                 </Text>
-                <View className="bg-gray-50 rounded-2xl p-4">
+                <View className="bg-white rounded-2xl p-4 shadow-md">
                   <Text className="text-gray-700 leading-6">
                     {recipe.description}
                   </Text>

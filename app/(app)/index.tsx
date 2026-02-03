@@ -6,6 +6,7 @@ import { useAuth } from "../../src/providers/AuthProvider";
 import { useSession } from "../../src/hooks/useSession";
 import { MacroBar } from "../../src/components/MacroBar";
 import { RecipeImage } from "../../src/components/RecipeImage";
+import { SharedIcon } from "../../src/components/SharedIcon";
 import { useRecipes, useTags } from "../../src/hooks/useRecipes";
 
 export default function HomeScreen() {
@@ -255,7 +256,7 @@ export default function HomeScreen() {
                   selectedTags.length === 0 ? "text-white" : "text-gray-700"
                 }`}>All</Text>
               </TouchableOpacity>
-              {["Breakfast", "Lunch", "Snack", "Dinner"].map((category) => {
+              {["Breakfast", "Lunch", "Snack", "Dinner", "GF"].map((category) => {
                 const isSelected = selectedTags.some((t) => t.toLowerCase() === category.toLowerCase());
                 return (
                   <TouchableOpacity 
@@ -278,7 +279,7 @@ export default function HomeScreen() {
 
           {/* Other Tags (scrollable) */}
           {(() => {
-            const mainCategories = ["Breakfast", "Lunch", "Snack", "Dinner"];
+            const mainCategories = ["Breakfast", "Lunch", "Snack", "Dinner", "GF"];
             const otherTags = tags.filter((tag) => 
               !mainCategories.some((cat) => cat.toLowerCase() === tag.toLowerCase())
             );
@@ -364,14 +365,22 @@ export default function HomeScreen() {
                 {filteredRecipes.map((recipe) => (
                   <TouchableOpacity
                     key={recipe.id}
-                    className="w-[48%] bg-white rounded-2xl mb-4 border border-gray-100 overflow-hidden active:opacity-80"
+                    className="w-[48%] bg-white rounded-2xl mb-4 shadow-md overflow-hidden active:opacity-80"
                     onPress={() => router.push(`/recipe/${recipe.id}`)}
                   >
                     <View className="relative">
                       <RecipeImage imageUrl={recipe.imageUrl} size="small" />
+                      {(recipe.prepTime || recipe.cookTime) && (
+                        <View className="absolute top-2 left-2 bg-white/80 rounded-full px-2 py-1 flex-row items-center">
+                          <Text className="text-gray-600 text-xs">⏱️</Text>
+                          <Text className="text-gray-700 text-xs font-medium ml-0.5">
+                            {(recipe.prepTime || 0) + (recipe.cookTime || 0)}m
+                          </Text>
+                        </View>
+                      )}
                       {recipe.householdId && (
-                        <View className="absolute top-2 right-2 bg-white/90 rounded-full px-2 py-0.5">
-                          <Text className="text-xs">👨‍👩‍👧‍👦</Text>
+                        <View className="absolute top-2 right-2 bg-white rounded-full p-1.5 shadow-md">
+                          <SharedIcon size={14} color="#EA4335" />
                         </View>
                       )}
                     </View>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { 
   View, 
   Text, 
@@ -9,11 +9,16 @@ import {
   KeyboardAvoidingView,
   Platform,
   Image,
-  ActivityIndicator
+  ActivityIndicator,
+  Modal,
+  Pressable,
+  Animated,
+  Dimensions
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useRouter, useLocalSearchParams } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
+import ConfettiCannon from "react-native-confetti-cannon";
 import { Ingredient, calculateCalories } from "../../../../src/types/recipe";
 import { useRecipe, useUpdateRecipe, useTags } from "../../../../src/hooks/useRecipes";
 import { useHousehold } from "../../../../src/hooks/useHousehold";
@@ -44,6 +49,9 @@ export default function EditRecipeScreen() {
   ]);
   const [shareWithHousehold, setShareWithHousehold] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
 
   // Load recipe data into form
   useEffect(() => {
@@ -70,6 +78,7 @@ export default function EditRecipeScreen() {
   }, [recipe, isInitialized]);
 
   const pickImage = async () => {
+    setShowImageModal(false);
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
       Alert.alert("Permission needed", "Please allow access to your photo library to add images.");
@@ -89,6 +98,7 @@ export default function EditRecipeScreen() {
   };
 
   const takePhoto = async () => {
+    setShowImageModal(false);
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== "granted") {
       Alert.alert("Permission needed", "Please allow access to your camera to take photos.");
@@ -106,17 +116,13 @@ export default function EditRecipeScreen() {
     }
   };
 
+  const removePhoto = () => {
+    setShowImageModal(false);
+    setImage(null);
+  };
+
   const showImageOptions = () => {
-    Alert.alert(
-      "Change Photo",
-      "Choose an option",
-      [
-        { text: "Take Photo", onPress: takePhoto },
-        { text: "Choose from Library", onPress: pickImage },
-        { text: "Remove Photo", onPress: () => setImage(null), style: "destructive" },
-        { text: "Cancel", style: "cancel" },
-      ]
-    );
+    setShowImageModal(true);
   };
 
   const toggleTag = (tag: string) => {
@@ -194,11 +200,18 @@ export default function EditRecipeScreen() {
         },
       });
 
-      Alert.alert(
-        "Recipe Updated!",
-        `"${name}" has been saved.`,
-        [{ text: "OK", onPress: () => router.back() }]
-      );
+      // Show success animation with confetti
+      setShowSuccess(true);
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+      
+      // Navigate back after delay
+      setTimeout(() => {
+        router.back();
+      }, 2500);
     } catch (error) {
       console.error("Error updating recipe:", error);
       Alert.alert("Error", "Failed to update recipe. Please try again.");
@@ -223,6 +236,59 @@ export default function EditRecipeScreen() {
           gestureDirection: "horizontal",
         }}
       />
+      
+      {/* Image Options Modal */}
+      <Modal
+        visible={showImageModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowImageModal(false)}
+      >
+        <Pressable 
+          className="flex-1 bg-black/50 justify-end"
+          onPress={() => setShowImageModal(false)}
+        >
+          <Pressable 
+            className="bg-white rounded-t-3xl px-6 pb-8 pt-4"
+            onPress={(e) => e.stopPropagation()}
+          >
+            <View className="w-12 h-1 bg-gray-300 rounded-full self-center mb-4" />
+            <Text className="text-lg font-semibold text-gray-900 text-center mb-4">Change Photo</Text>
+            
+            <TouchableOpacity
+              className="bg-gray-50 rounded-xl py-4 px-4 mb-3 flex-row items-center"
+              onPress={takePhoto}
+            >
+              <Text className="text-2xl mr-3">📸</Text>
+              <Text className="text-gray-900 font-medium">Take Photo</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              className="bg-gray-50 rounded-xl py-4 px-4 mb-3 flex-row items-center"
+              onPress={pickImage}
+            >
+              <Text className="text-2xl mr-3">🖼️</Text>
+              <Text className="text-gray-900 font-medium">Choose from Library</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              className="bg-red-50 rounded-xl py-4 px-4 mb-3 flex-row items-center"
+              onPress={removePhoto}
+            >
+              <Text className="text-2xl mr-3">🗑️</Text>
+              <Text className="text-red-600 font-medium">Remove Photo</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              className="py-4 px-4"
+              onPress={() => setShowImageModal(false)}
+            >
+              <Text className="text-gray-500 font-medium text-center">Cancel</Text>
+            </TouchableOpacity>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
       <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
         <KeyboardAvoidingView 
           behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -529,6 +595,25 @@ export default function EditRecipeScreen() {
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
+
+      {/* Success Overlay with Confetti */}
+      {showSuccess && (
+        <Animated.View 
+          style={{ opacity: fadeAnim }}
+          className="absolute inset-0 bg-white/95 items-center justify-center z-50"
+        >
+          <ConfettiCannon
+            count={200}
+            origin={{ x: Dimensions.get("window").width / 2, y: -10 }}
+            autoStart={true}
+            fadeOut
+            fallSpeed={2500}
+            explosionSpeed={400}
+            colors={['#EA4335', '#FBBC05', '#34A853', '#4285F4', '#FF6B6B', '#FFB347', '#E91E63', '#9C27B0']}
+          />
+          <Text className="text-3xl font-bold text-gray-900">Recipe Updated!</Text>
+        </Animated.View>
+      )}
     </>
   );
 }

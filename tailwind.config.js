@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  darkMode: 'class',
   content: [
     "./app/**/*.{js,jsx,ts,tsx}",
     "./src/**/*.{js,jsx,ts,tsx}",
@@ -8,7 +9,7 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Primary coral red from the design
+        // Primary coral/orange from the dark design
         primary: {
           50: '#FEF2F2',
           100: '#FEE2E2',
@@ -33,6 +34,16 @@ module.exports = {
           700: '#374151',
           800: '#1F2937',
           900: '#111827',
+        },
+        // Dark mode specific colors (from screenshots)
+        dark: {
+          bg: '#1F1D2B',        // Main background
+          card: '#252836',      // Card background
+          surface: '#2D303E',   // Elevated surfaces
+          border: '#393C49',    // Borders
+          text: '#FFFFFF',      // Primary text
+          textMuted: '#ABBBC2', // Secondary text
+          accent: '#EA7C69',    // Coral/orange accent
         },
       },
       borderRadius: {

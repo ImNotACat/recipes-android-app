@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useRouter } from "expo-router";
 import { useAuth } from "../../src/providers/AuthProvider";
 import { useSession } from "../../src/hooks/useSession";
+import { useTheme } from "../../src/providers/ThemeProvider";
 import { MacroBar } from "../../src/components/MacroBar";
 import { RecipeImage } from "../../src/components/RecipeImage";
 import { SharedIcon } from "../../src/components/SharedIcon";
@@ -12,6 +13,7 @@ import { useRecipes, useTags } from "../../src/hooks/useRecipes";
 export default function HomeScreen() {
   const { signOut } = useAuth();
   const { user } = useSession();
+  const { isDark, theme, setTheme } = useTheme();
   const router = useRouter();
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -125,7 +127,10 @@ export default function HomeScreen() {
           headerShown: false,
         }}
       />
-      <SafeAreaView className="flex-1 bg-white">
+      <SafeAreaView 
+        className="flex-1"
+        style={{ backgroundColor: isDark ? '#1F1D2B' : 'white' }}
+      >
         <ScrollView 
           className="flex-1" 
           contentContainerClassName="pb-6"
@@ -133,8 +138,8 @@ export default function HomeScreen() {
             <RefreshControl
               refreshing={isRefetching}
               onRefresh={refetch}
-              colors={["#EA4335"]}
-              tintColor="#EA4335"
+              colors={[isDark ? "#EA7C69" : "#EA4335"]}
+              tintColor={isDark ? "#EA7C69" : "#EA4335"}
             />
           }
         >
@@ -143,12 +148,15 @@ export default function HomeScreen() {
             <View className="flex-row items-center justify-between">
               <View className="flex-1">
                 <Text 
-                  className="text-primary-500"
-                  style={{ fontFamily: 'Lobster_400Regular', fontSize: 32 }}
+                  style={{ 
+                    fontFamily: 'Lobster_400Regular', 
+                    fontSize: 32,
+                    color: isDark ? '#EA7C69' : '#EA4335'
+                  }}
                 >
                   Plateful
                 </Text>
-                <Text className="text-gray-400 mt-1">
+                <Text style={{ color: isDark ? '#ABBBC2' : '#9CA3AF', marginTop: 4 }}>
                   Hello, {firstName}!
                 </Text>
               </View>
@@ -176,36 +184,86 @@ export default function HomeScreen() {
               onRequestClose={() => setShowProfileMenu(false)}
             >
               <Pressable 
-                className="flex-1 bg-black/30"
+                className="flex-1"
+                style={{ backgroundColor: 'rgba(0,0,0,0.4)' }}
                 onPress={() => setShowProfileMenu(false)}
               >
-                <View className="absolute right-6 top-16 bg-white rounded-2xl shadow-lg overflow-hidden min-w-[180px]">
+                <View 
+                  className="absolute right-6 top-16 rounded-2xl shadow-lg overflow-hidden min-w-[180px]"
+                  style={{ backgroundColor: isDark ? '#252836' : 'white' }}
+                >
                   {/* User Info */}
-                  <View className="p-4 border-b border-gray-100">
-                    <Text className="font-semibold text-gray-900" numberOfLines={1}>
+                  <View 
+                    className="p-4"
+                    style={{ borderBottomWidth: 1, borderColor: isDark ? '#393C49' : '#F3F4F6' }}
+                  >
+                    <Text 
+                      className="font-semibold" 
+                      style={{ color: isDark ? '#FFFFFF' : '#111827' }}
+                      numberOfLines={1}
+                    >
                       {user?.user_metadata?.full_name || "User"}
                     </Text>
-                    <Text className="text-sm text-gray-400" numberOfLines={1}>
+                    <Text 
+                      className="text-sm" 
+                      style={{ color: isDark ? '#ABBBC2' : '#9CA3AF' }}
+                      numberOfLines={1}
+                    >
                       {user?.email}
                     </Text>
                   </View>
                   
                   {/* Menu Items */}
                   <TouchableOpacity 
-                    className="flex-row items-center px-4 py-3 active:bg-gray-50"
+                    className="flex-row items-center px-4 py-3"
+                    style={{ backgroundColor: isDark ? '#252836' : 'white' }}
                     onPress={handleSettings}
                   >
                     <Text className="text-lg mr-3">⚙️</Text>
-                    <Text className="text-gray-700">Settings</Text>
+                    <Text style={{ color: isDark ? '#ABBBC2' : '#374151' }}>Settings</Text>
                   </TouchableOpacity>
                   
+                  {/* Dark Mode Toggle */}
+                  <View 
+                    className="flex-row items-center justify-between px-4 py-3"
+                    style={{ 
+                      backgroundColor: isDark ? '#252836' : 'white',
+                      borderTopWidth: 1, 
+                      borderColor: isDark ? '#393C49' : '#F3F4F6' 
+                    }}
+                  >
+                    <View className="flex-row items-center">
+                      <Text className="text-lg mr-3">{isDark ? '🌙' : '☀️'}</Text>
+                      <Text style={{ color: isDark ? '#ABBBC2' : '#374151' }}>Dark Mode</Text>
+                    </View>
+                    <TouchableOpacity
+                      className="px-3 py-1 rounded-full"
+                      style={{ 
+                        backgroundColor: isDark ? '#EA7C69' : '#F3F4F6',
+                      }}
+                      onPress={() => setTheme(isDark ? 'light' : 'dark')}
+                    >
+                      <Text 
+                        className="text-xs font-medium"
+                        style={{ color: isDark ? '#FFFFFF' : '#6B7280' }}
+                      >
+                        {isDark ? 'ON' : 'OFF'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                  
                   <TouchableOpacity 
-                    className="flex-row items-center px-4 py-3 active:bg-gray-50 border-t border-gray-100"
+                    className="flex-row items-center px-4 py-3"
+                    style={{ 
+                      backgroundColor: isDark ? '#252836' : 'white',
+                      borderTopWidth: 1, 
+                      borderColor: isDark ? '#393C49' : '#F3F4F6' 
+                    }}
                     onPress={handleSignOut}
                     disabled={isSigningOut}
                   >
                     <Text className="text-lg mr-3">🚪</Text>
-                    <Text className="text-primary-500">
+                    <Text style={{ color: isDark ? '#EA7C69' : '#EA4335' }}>
                       {isSigningOut ? "Signing out..." : "Log out"}
                     </Text>
                   </TouchableOpacity>
@@ -215,12 +273,20 @@ export default function HomeScreen() {
 
             {/* Search Bar & Add Button */}
             <View className="mt-6 flex-row items-center gap-3">
-              <View className="flex-1 flex-row items-center bg-gray-50 rounded-full px-4 py-3 border border-gray-100">
-                <Text className="text-gray-400 mr-2">🔍</Text>
+              <View 
+                className="flex-1 flex-row items-center rounded-full px-4 py-3"
+                style={{ 
+                  backgroundColor: isDark ? '#252836' : '#F9FAFB',
+                  borderWidth: 1,
+                  borderColor: isDark ? '#393C49' : '#F3F4F6'
+                }}
+              >
+                <Text className="mr-2" style={{ color: isDark ? '#ABBBC2' : '#9CA3AF' }}>🔍</Text>
                 <TextInput
-                  className="flex-1 text-gray-900"
+                  className="flex-1"
+                  style={{ color: isDark ? '#FFFFFF' : '#111827' }}
                   placeholder="Search recipes..."
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={isDark ? '#ABBBC2' : '#9CA3AF'}
                   value={searchQuery}
                   onChangeText={setSearchQuery}
                   returnKeyType="search"
@@ -228,12 +294,13 @@ export default function HomeScreen() {
                 />
                 {searchQuery.length > 0 && (
                   <TouchableOpacity onPress={() => setSearchQuery("")}>
-                    <Text className="text-gray-400 text-lg">✕</Text>
+                    <Text className="text-lg" style={{ color: isDark ? '#ABBBC2' : '#9CA3AF' }}>✕</Text>
                   </TouchableOpacity>
                 )}
               </View>
               <TouchableOpacity 
-                className="w-12 h-12 bg-primary-500 rounded-full items-center justify-center"
+                className="w-12 h-12 rounded-full items-center justify-center"
+                style={{ backgroundColor: isDark ? '#EA7C69' : '#EA4335' }}
                 onPress={() => router.push("/recipe/add")}
               >
                 <Text className="text-white text-2xl font-light">+</Text>
@@ -245,32 +312,48 @@ export default function HomeScreen() {
           <View className="px-6 mb-3">
             <View className="flex-row gap-2 items-center">
               <TouchableOpacity 
-                className={`px-3 py-2 rounded-full ${
-                  selectedTags.length === 0 
-                    ? "bg-primary-500" 
-                    : "bg-gray-50 border border-gray-200"
-                }`}
+                className="px-3 py-2 rounded-full"
+                style={{
+                  backgroundColor: selectedTags.length === 0 
+                    ? (isDark ? '#EA7C69' : '#EA4335')
+                    : (isDark ? '#252836' : '#F9FAFB'),
+                  borderWidth: selectedTags.length === 0 ? 0 : 1,
+                  borderColor: isDark ? '#393C49' : '#E5E7EB',
+                }}
                 onPress={clearAllTags}
               >
-                <Text className={`text-sm font-medium ${
-                  selectedTags.length === 0 ? "text-white" : "text-gray-700"
-                }`}>All</Text>
+                <Text 
+                  className="text-sm font-medium"
+                  style={{ 
+                    color: selectedTags.length === 0 
+                      ? '#FFFFFF' 
+                      : (isDark ? '#ABBBC2' : '#374151')
+                  }}
+                >All</Text>
               </TouchableOpacity>
               {["Breakfast", "Lunch", "Snack", "Dinner", "GF"].map((category) => {
                 const isSelected = selectedTags.some((t) => t.toLowerCase() === category.toLowerCase());
                 return (
                   <TouchableOpacity 
                     key={category}
-                    className={`px-3 py-2 rounded-full ${
-                      isSelected 
-                        ? "bg-primary-500" 
-                        : "bg-gray-50 border border-gray-200"
-                    }`}
+                    className="px-3 py-2 rounded-full"
+                    style={{
+                      backgroundColor: isSelected 
+                        ? (isDark ? '#EA7C69' : '#EA4335')
+                        : (isDark ? '#252836' : '#F9FAFB'),
+                      borderWidth: isSelected ? 0 : 1,
+                      borderColor: isDark ? '#393C49' : '#E5E7EB',
+                    }}
                     onPress={() => toggleTag(category)}
                   >
-                    <Text className={`text-sm font-medium ${
-                      isSelected ? "text-white" : "text-gray-700"
-                    }`}>{category}</Text>
+                    <Text 
+                      className="text-sm font-medium"
+                      style={{ 
+                        color: isSelected 
+                          ? '#FFFFFF' 
+                          : (isDark ? '#ABBBC2' : '#374151')
+                      }}
+                    >{category}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -298,16 +381,24 @@ export default function HomeScreen() {
                   return (
                     <TouchableOpacity 
                       key={tag}
-                      className={`px-4 py-1.5 rounded-full ${
-                        isSelected 
-                          ? "bg-primary-500" 
-                          : "bg-gray-50 border border-gray-200"
-                      }`}
+                      className="px-4 py-1.5 rounded-full"
+                      style={{
+                        backgroundColor: isSelected 
+                          ? (isDark ? '#EA7C69' : '#EA4335')
+                          : (isDark ? '#252836' : '#F9FAFB'),
+                        borderWidth: isSelected ? 0 : 1,
+                        borderColor: isDark ? '#393C49' : '#E5E7EB',
+                      }}
                       onPress={() => toggleTag(tag)}
                     >
-                      <Text className={`text-sm font-medium ${
-                        isSelected ? "text-white" : "text-gray-700"
-                      }`}>{tag}</Text>
+                      <Text 
+                        className="text-sm font-medium"
+                        style={{ 
+                          color: isSelected 
+                            ? '#FFFFFF' 
+                            : (isDark ? '#ABBBC2' : '#374151')
+                        }}
+                      >{tag}</Text>
                     </TouchableOpacity>
                   );
                 })}
@@ -322,27 +413,38 @@ export default function HomeScreen() {
             className="px-6 mb-6"
             contentContainerClassName="gap-2"
           >
-            {calorieRanges.map((range) => (
-              <TouchableOpacity 
-                key={range}
-                className={`px-4 py-1.5 rounded-full ${
-                  selectedCalorieRanges.includes(range) 
-                    ? "bg-orange-500" 
-                    : "bg-gray-50 border border-gray-200"
-                }`}
-                onPress={() => toggleCalorieRange(range)}
-              >
-                <Text className={`text-sm font-medium ${
-                  selectedCalorieRanges.includes(range) ? "text-white" : "text-gray-600"
-                }`}>{range} cal</Text>
-              </TouchableOpacity>
-            ))}
+            {calorieRanges.map((range) => {
+              const isSelected = selectedCalorieRanges.includes(range);
+              return (
+                <TouchableOpacity 
+                  key={range}
+                  className="px-4 py-1.5 rounded-full"
+                  style={{
+                    backgroundColor: isSelected 
+                      ? '#F97316'
+                      : (isDark ? '#252836' : '#F9FAFB'),
+                    borderWidth: isSelected ? 0 : 1,
+                    borderColor: isDark ? '#393C49' : '#E5E7EB',
+                  }}
+                  onPress={() => toggleCalorieRange(range)}
+                >
+                  <Text 
+                    className="text-sm font-medium"
+                    style={{ 
+                      color: isSelected 
+                        ? '#FFFFFF' 
+                        : (isDark ? '#ABBBC2' : '#4B5563')
+                    }}
+                  >{range} cal</Text>
+                </TouchableOpacity>
+              );
+            })}
             {selectedCalorieRanges.length > 0 && (
               <TouchableOpacity 
                 className="px-3 py-1.5"
                 onPress={() => setSelectedCalorieRanges([])}
               >
-                <Text className="text-gray-400 text-sm">Clear</Text>
+                <Text className="text-sm" style={{ color: isDark ? '#ABBBC2' : '#9CA3AF' }}>Clear</Text>
               </TouchableOpacity>
             )}
           </ScrollView>
@@ -351,59 +453,78 @@ export default function HomeScreen() {
           <View className="px-6">
             {isLoading ? (
               <View className="items-center py-12">
-                <ActivityIndicator size="large" color="#EA4335" />
-                <Text className="text-gray-400 mt-3">Loading recipes...</Text>
+                <ActivityIndicator size="large" color={isDark ? "#EA7C69" : "#EA4335"} />
+                <Text style={{ color: isDark ? '#ABBBC2' : '#9CA3AF', marginTop: 12 }}>Loading recipes...</Text>
               </View>
             ) : error ? (
               <View className="items-center py-12">
                 <Text className="text-4xl mb-3">😕</Text>
-                <Text className="text-gray-500">Failed to load recipes</Text>
-                <Text className="text-gray-400 text-sm mt-1">Please try again later</Text>
+                <Text style={{ color: isDark ? '#ABBBC2' : '#6B7280' }}>Failed to load recipes</Text>
+                <Text style={{ color: isDark ? '#ABBBC2' : '#9CA3AF' }} className="text-sm mt-1">Please try again later</Text>
               </View>
             ) : filteredRecipes && filteredRecipes.length > 0 ? (
               <View className="flex-row flex-wrap justify-between">
                 {filteredRecipes.map((recipe) => (
                   <TouchableOpacity
                     key={recipe.id}
-                    className="w-[48%] bg-white rounded-2xl mb-4 shadow-md overflow-hidden active:opacity-80"
+                    className="w-[48%] rounded-2xl mb-4 overflow-hidden active:opacity-80"
+                    style={{ 
+                      backgroundColor: isDark ? '#252836' : 'white',
+                      shadowColor: isDark ? '#000' : '#000',
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: isDark ? 0.3 : 0.1,
+                      shadowRadius: 4,
+                      elevation: 3,
+                    }}
                     onPress={() => router.push(`/recipe/${recipe.id}`)}
                   >
                     <View className="relative">
-                      <RecipeImage imageUrl={recipe.imageUrl} size="small" />
+                      <RecipeImage imageUrl={recipe.imageUrl} size="small" isDark={isDark} />
                       {(recipe.prepTime || recipe.cookTime) && (
-                        <View className="absolute top-2 left-2 bg-white/80 rounded-full px-2 py-1 flex-row items-center">
-                          <Text className="text-gray-600 text-xs">⏱️</Text>
-                          <Text className="text-gray-700 text-xs font-medium ml-0.5">
+                        <View 
+                          className="absolute top-2 left-2 rounded-full px-2 py-1 flex-row items-center"
+                          style={{ backgroundColor: isDark ? 'rgba(37,40,54,0.9)' : 'rgba(255,255,255,0.8)' }}
+                        >
+                          <Text style={{ color: isDark ? '#ABBBC2' : '#4B5563' }} className="text-xs">⏱️</Text>
+                          <Text 
+                            className="text-xs font-medium ml-0.5"
+                            style={{ color: isDark ? '#FFFFFF' : '#374151' }}
+                          >
                             {(recipe.prepTime || 0) + (recipe.cookTime || 0)}m
                           </Text>
                         </View>
                       )}
                       {recipe.householdId && (
-                        <View className="absolute top-2 right-2 bg-white rounded-full p-1.5 shadow-md">
-                          <SharedIcon size={14} color="#EA4335" />
+                        <View 
+                          className="absolute top-2 right-2 rounded-full p-1.5"
+                          style={{ backgroundColor: isDark ? '#252836' : 'white' }}
+                        >
+                          <SharedIcon size={14} color={isDark ? "#EA7C69" : "#EA4335"} />
                         </View>
                       )}
                     </View>
                     <View className="p-3">
-                      <Text className="font-semibold text-gray-900">{recipe.name}</Text>
+                      <Text className="font-semibold" style={{ color: isDark ? '#FFFFFF' : '#111827' }}>{recipe.name}</Text>
                       {recipe.tags.length > 0 ? (
                         <View className="flex-row flex-wrap gap-1 mb-2 mt-1">
                           {recipe.tags.map((tag, index) => (
                             <View 
                               key={index}
-                              className="bg-gray-100 px-2 py-0.5 rounded-full"
+                              className="px-2 py-0.5 rounded-full"
+                              style={{ backgroundColor: isDark ? '#393C49' : '#F3F4F6' }}
                             >
-                              <Text className="text-gray-500 text-xs">{tag}</Text>
+                              <Text className="text-xs" style={{ color: isDark ? '#ABBBC2' : '#6B7280' }}>{tag}</Text>
                             </View>
                           ))}
                         </View>
                       ) : (
-                        <Text className="text-gray-400 text-sm mb-2">Uncategorized</Text>
+                        <Text className="text-sm mb-2" style={{ color: isDark ? '#ABBBC2' : '#9CA3AF' }}>Uncategorized</Text>
                       )}
                       <MacroBar 
                         macros={recipe.macros}
                         height={4}
                         labelPosition="below"
+                        isDark={isDark}
                       />
                     </View>
                   </TouchableOpacity>
@@ -414,15 +535,15 @@ export default function HomeScreen() {
                 <Text className="text-5xl mb-3">🍽️</Text>
                 {searchQuery.trim() ? (
                   <>
-                    <Text className="text-gray-900 font-semibold text-lg">No results for "{searchQuery}"</Text>
-                    <Text className="text-gray-400 text-center mt-1">
+                    <Text className="font-semibold text-lg" style={{ color: isDark ? '#FFFFFF' : '#111827' }}>No results for "{searchQuery}"</Text>
+                    <Text className="text-center mt-1" style={{ color: isDark ? '#ABBBC2' : '#9CA3AF' }}>
                       Try a different search term
                     </Text>
                   </>
                 ) : selectedTags.length > 0 || selectedCalorieRanges.length > 0 ? (
                   <>
-                    <Text className="text-gray-900 font-semibold text-lg">No matching recipes</Text>
-                    <Text className="text-gray-400 text-center mt-1 px-8">
+                    <Text className="font-semibold text-lg" style={{ color: isDark ? '#FFFFFF' : '#111827' }}>No matching recipes</Text>
+                    <Text className="text-center mt-1 px-8" style={{ color: isDark ? '#ABBBC2' : '#9CA3AF' }}>
                       {selectedTags.length > 0 && selectedCalorieRanges.length > 0
                         ? `No recipes matching selected tags and calorie range`
                         : selectedTags.length > 0
@@ -432,8 +553,8 @@ export default function HomeScreen() {
                   </>
                 ) : (
                   <>
-                    <Text className="text-gray-900 font-semibold text-lg">No recipes yet</Text>
-                    <Text className="text-gray-400 text-center mt-1">
+                    <Text className="font-semibold text-lg" style={{ color: isDark ? '#FFFFFF' : '#111827' }}>No recipes yet</Text>
+                    <Text className="text-center mt-1" style={{ color: isDark ? '#ABBBC2' : '#9CA3AF' }}>
                       Tap the + button to add your first recipe!
                     </Text>
                   </>

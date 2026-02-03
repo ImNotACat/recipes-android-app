@@ -13,6 +13,7 @@ interface MacroBarProps {
   height?: number;
   showLabel?: boolean;
   labelPosition?: "above" | "below";
+  isDark?: boolean;
 }
 
 export function MacroBar({
@@ -20,6 +21,7 @@ export function MacroBar({
   height = 6,
   showLabel = true,
   labelPosition = "below",
+  isDark = false,
 }: MacroBarProps) {
   // Calculate calories: carbs=4cal/g, protein=4cal/g, fat=9cal/g
   const carbCalories = macros.carbs * 4;
@@ -42,15 +44,15 @@ export function MacroBar({
   };
 
   const label = (
-    <Text className="text-xs text-gray-500">
-      <Text className="font-medium text-gray-700">{Math.round(totalCalories)} cal</Text>
-      <Text className="text-gray-300"> · </Text>
+    <Text className="text-xs" style={{ color: isDark ? '#ABBBC2' : '#6B7280' }}>
+      <Text className="font-medium" style={{ color: isDark ? '#FFFFFF' : '#374151' }}>{Math.round(totalCalories)} cal</Text>
+      <Text style={{ color: isDark ? '#393C49' : '#D1D5DB' }}> · </Text>
       <Text style={{ color: colors.carbs }}>{macros.carbs}g</Text>
       <Text> C</Text>
-      <Text className="text-gray-300"> / </Text>
+      <Text style={{ color: isDark ? '#393C49' : '#D1D5DB' }}> / </Text>
       <Text style={{ color: colors.protein }}>{macros.protein}g</Text>
       <Text> P</Text>
-      <Text className="text-gray-300"> / </Text>
+      <Text style={{ color: isDark ? '#393C49' : '#D1D5DB' }}> / </Text>
       <Text style={{ color: colors.fat }}>{macros.fat}g</Text>
       <Text> F</Text>
     </Text>

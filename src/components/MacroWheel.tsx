@@ -14,6 +14,7 @@ interface MacroWheelProps {
   size?: number;
   strokeWidth?: number;
   showLegend?: boolean;
+  isDark?: boolean;
 }
 
 export function MacroWheel({
@@ -21,6 +22,7 @@ export function MacroWheel({
   size = 120,
   strokeWidth = 12,
   showLegend = true,
+  isDark = false,
 }: MacroWheelProps) {
   // Calculate calories: carbs=4cal/g, protein=4cal/g, fat=9cal/g
   const carbCalories = macros.carbs * 4;
@@ -67,7 +69,7 @@ export function MacroWheel({
             cx={center}
             cy={center}
             r={radius}
-            stroke="#F3F4F6"
+            stroke={isDark ? "#393C49" : "#F3F4F6"}
             strokeWidth={strokeWidth}
             fill="transparent"
           />
@@ -128,10 +130,16 @@ export function MacroWheel({
             height: size,
           }}
         >
-          <Text className="text-2xl font-bold text-gray-900">
+          <Text 
+            className="text-2xl font-bold"
+            style={{ color: isDark ? '#FFFFFF' : '#111827' }}
+          >
             {Math.round(totalCalories)}
           </Text>
-          <Text className="text-xs text-gray-400 uppercase tracking-wider">
+          <Text 
+            className="text-xs uppercase tracking-wider"
+            style={{ color: isDark ? '#ABBBC2' : '#9CA3AF' }}
+          >
             Calories
           </Text>
         </View>
@@ -146,8 +154,8 @@ export function MacroWheel({
               style={{ backgroundColor: colors.carbs }}
             />
             <View>
-              <Text className="text-gray-500 text-sm">Carbohydrate</Text>
-              <Text className="text-gray-900 font-semibold">{macros.carbs}g</Text>
+              <Text className="text-sm" style={{ color: isDark ? '#ABBBC2' : '#6B7280' }}>Carbohydrate</Text>
+              <Text className="font-semibold" style={{ color: isDark ? '#FFFFFF' : '#111827' }}>{macros.carbs}g</Text>
             </View>
           </View>
           
@@ -157,8 +165,8 @@ export function MacroWheel({
               style={{ backgroundColor: colors.protein }}
             />
             <View>
-              <Text className="text-gray-500 text-sm">Protein</Text>
-              <Text className="text-gray-900 font-semibold">{macros.protein}g</Text>
+              <Text className="text-sm" style={{ color: isDark ? '#ABBBC2' : '#6B7280' }}>Protein</Text>
+              <Text className="font-semibold" style={{ color: isDark ? '#FFFFFF' : '#111827' }}>{macros.protein}g</Text>
             </View>
           </View>
           
@@ -168,8 +176,8 @@ export function MacroWheel({
               style={{ backgroundColor: colors.fat }}
             />
             <View>
-              <Text className="text-gray-500 text-sm">Fat</Text>
-              <Text className="text-gray-900 font-semibold">{macros.fat}g</Text>
+              <Text className="text-sm" style={{ color: isDark ? '#ABBBC2' : '#6B7280' }}>Fat</Text>
+              <Text className="font-semibold" style={{ color: isDark ? '#FFFFFF' : '#111827' }}>{macros.fat}g</Text>
             </View>
           </View>
         </View>

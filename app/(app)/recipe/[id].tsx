@@ -6,10 +6,12 @@ import { activateKeepAwakeAsync, deactivateKeepAwake } from "expo-keep-awake";
 import { MacroWheel } from "../../../src/components/MacroWheel";
 import { RecipeImage } from "../../../src/components/RecipeImage";
 import { useRecipe, useDeleteRecipe } from "../../../src/hooks/useRecipes";
+import { useTheme } from "../../../src/providers/ThemeProvider";
 
 export default function RecipeDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { isDark } = useTheme();
   
   // Fetch recipe from database
   const { data: recipe, isLoading, error } = useRecipe(id || "");
@@ -75,20 +77,27 @@ export default function RecipeDetailScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView className="flex-1 bg-white items-center justify-center">
-        <ActivityIndicator size="large" color="#EA4335" />
-        <Text className="text-gray-400 mt-3">Loading recipe...</Text>
+      <SafeAreaView 
+        className="flex-1 items-center justify-center"
+        style={{ backgroundColor: isDark ? '#1F1D2B' : 'white' }}
+      >
+        <ActivityIndicator size="large" color={isDark ? "#EA7C69" : "#EA4335"} />
+        <Text style={{ color: isDark ? '#ABBBC2' : '#9CA3AF', marginTop: 12 }}>Loading recipe...</Text>
       </SafeAreaView>
     );
   }
 
   if (error || !recipe) {
     return (
-      <SafeAreaView className="flex-1 bg-white items-center justify-center">
+      <SafeAreaView 
+        className="flex-1 items-center justify-center"
+        style={{ backgroundColor: isDark ? '#1F1D2B' : 'white' }}
+      >
         <Text className="text-4xl mb-3">😕</Text>
-        <Text className="text-gray-500">Recipe not found</Text>
+        <Text style={{ color: isDark ? '#ABBBC2' : '#6B7280' }}>Recipe not found</Text>
         <TouchableOpacity 
-          className="mt-4 px-4 py-2 bg-primary-500 rounded-full"
+          className="mt-4 px-4 py-2 rounded-full"
+          style={{ backgroundColor: isDark ? '#EA7C69' : '#EA4335' }}
           onPress={() => router.back()}
         >
           <Text className="text-white">Go Back</Text>
@@ -106,30 +115,37 @@ export default function RecipeDetailScreen() {
           gestureDirection: "horizontal",
         }}
       />
-      <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
+      <SafeAreaView 
+        className="flex-1" 
+        style={{ backgroundColor: isDark ? '#1F1D2B' : 'white' }}
+        edges={["top"]}
+      >
         <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
           {/* Header with back, edit, and delete buttons */}
           <View className="absolute top-4 left-4 right-4 z-10 flex-row justify-between">
             <TouchableOpacity
-              className="w-10 h-10 bg-white/90 rounded-full items-center justify-center shadow-sm"
+              className="w-10 h-10 rounded-full items-center justify-center shadow-sm"
+              style={{ backgroundColor: isDark ? 'rgba(37,40,54,0.9)' : 'rgba(255,255,255,0.9)' }}
               onPress={() => router.back()}
             >
-              <Text className="text-lg">←</Text>
+              <Text className="text-lg" style={{ color: isDark ? '#FFFFFF' : '#111827' }}>←</Text>
             </TouchableOpacity>
             <View className="flex-row gap-2">
               <TouchableOpacity
-                className="w-10 h-10 bg-white/90 rounded-full items-center justify-center shadow-sm"
+                className="w-10 h-10 rounded-full items-center justify-center shadow-sm"
+                style={{ backgroundColor: isDark ? 'rgba(37,40,54,0.9)' : 'rgba(255,255,255,0.9)' }}
                 onPress={() => router.push(`/recipe/edit/${id}`)}
               >
                 <Text className="text-lg">✏️</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                className="w-10 h-10 bg-white/90 rounded-full items-center justify-center shadow-sm"
+                className="w-10 h-10 rounded-full items-center justify-center shadow-sm"
+                style={{ backgroundColor: isDark ? 'rgba(37,40,54,0.9)' : 'rgba(255,255,255,0.9)' }}
                 onPress={handleDelete}
                 disabled={deleteRecipe.isPending}
               >
                 {deleteRecipe.isPending ? (
-                  <ActivityIndicator size="small" color="#EA4335" />
+                  <ActivityIndicator size="small" color={isDark ? "#EA7C69" : "#EA4335"} />
                 ) : (
                   <Text className="text-lg">🗑️</Text>
                 )}
@@ -138,62 +154,102 @@ export default function RecipeDetailScreen() {
           </View>
 
           {/* Recipe Image */}
-          <RecipeImage imageUrl={recipe.imageUrl} size="large" />
+          <RecipeImage imageUrl={recipe.imageUrl} size="large" isDark={isDark} />
 
           {/* Content */}
-          <View className="px-6 py-6 bg-gray-50">
+          <View 
+            className="px-6 py-6"
+            style={{ backgroundColor: isDark ? '#1F1D2B' : '#F9FAFB' }}
+          >
             {/* Title */}
-            <Text className="text-2xl font-bold text-gray-900 mb-2">
+            <Text 
+              className="text-2xl font-bold mb-2"
+              style={{ color: isDark ? '#FFFFFF' : '#111827' }}
+            >
               {recipe.name}
             </Text>
             
             {/* Servings, Multiplier & Keep Awake */}
             <View className="flex-row gap-3 mb-6">
               {/* Servings Display */}
-              <View className="flex-1 bg-white rounded-2xl p-4 shadow-md justify-center">
+              <View 
+                className="flex-1 rounded-2xl p-4 shadow-md justify-center"
+                style={{ backgroundColor: isDark ? '#252836' : 'white' }}
+              >
                 <View className="flex-row items-center justify-center">
                   <Text className="text-lg mr-2">🍽️</Text>
-                  <Text className="text-gray-700">
-                    <Text className="font-bold text-gray-900 text-xl">{scaledServings}</Text>
-                    <Text className="text-gray-400"> servings</Text>
+                  <Text>
+                    <Text 
+                      className="font-bold text-xl"
+                      style={{ color: isDark ? '#FFFFFF' : '#111827' }}
+                    >{scaledServings}</Text>
+                    <Text style={{ color: isDark ? '#ABBBC2' : '#9CA3AF' }}> servings</Text>
                   </Text>
                 </View>
                 {multiplier > 1 && (
-                  <Text className="text-xs text-gray-400 text-center mt-1">
+                  <Text 
+                    className="text-xs text-center mt-1"
+                    style={{ color: isDark ? '#ABBBC2' : '#9CA3AF' }}
+                  >
                     (originally {originalServings})
                   </Text>
                 )}
               </View>
 
               {/* Multiplier */}
-              <View className="bg-white rounded-2xl p-4 shadow-md">
-                <Text className="text-xs text-gray-400 mb-2 text-center">Multiply</Text>
+              <View 
+                className="rounded-2xl p-4 shadow-md"
+                style={{ backgroundColor: isDark ? '#252836' : 'white' }}
+              >
+                <Text 
+                  className="text-xs mb-2 text-center"
+                  style={{ color: isDark ? '#ABBBC2' : '#9CA3AF' }}
+                >Multiply</Text>
                 <View className="flex-row items-center gap-2">
                   <TouchableOpacity
-                    className="w-7 h-7 bg-gray-100 rounded-full items-center justify-center"
+                    className="w-7 h-7 rounded-full items-center justify-center"
+                    style={{ backgroundColor: isDark ? '#393C49' : '#F3F4F6' }}
                     onPress={() => setMultiplier(Math.max(1, multiplier - 1))}
                   >
-                    <Text className="text-gray-600 text-sm font-medium">−</Text>
+                    <Text 
+                      className="text-sm font-medium"
+                      style={{ color: isDark ? '#ABBBC2' : '#4B5563' }}
+                    >−</Text>
                   </TouchableOpacity>
-                  <Text className="text-lg font-bold text-primary-500 w-8 text-center">
+                  <Text 
+                    className="text-lg font-bold w-8 text-center"
+                    style={{ color: isDark ? '#EA7C69' : '#EA4335' }}
+                  >
                     {multiplier}x
                   </Text>
                   <TouchableOpacity
-                    className="w-7 h-7 bg-gray-100 rounded-full items-center justify-center"
+                    className="w-7 h-7 rounded-full items-center justify-center"
+                    style={{ backgroundColor: isDark ? '#393C49' : '#F3F4F6' }}
                     onPress={() => setMultiplier(multiplier + 1)}
                   >
-                    <Text className="text-gray-600 text-sm font-medium">+</Text>
+                    <Text 
+                      className="text-sm font-medium"
+                      style={{ color: isDark ? '#ABBBC2' : '#4B5563' }}
+                    >+</Text>
                   </TouchableOpacity>
                 </View>
               </View>
               
               {/* Keep Screen On Toggle */}
               <TouchableOpacity 
-                className={`bg-white rounded-2xl p-4 items-center justify-center shadow-md ${keepAwake ? 'border-2 border-primary-500' : ''}`}
+                className="rounded-2xl p-4 items-center justify-center shadow-md"
+                style={{ 
+                  backgroundColor: isDark ? '#252836' : 'white',
+                  borderWidth: keepAwake ? 2 : 0,
+                  borderColor: isDark ? '#EA7C69' : '#EA4335',
+                }}
                 onPress={() => setKeepAwake(!keepAwake)}
               >
                 <Text className="text-lg mb-1">{keepAwake ? '☀️' : '🌙'}</Text>
-                <Text className={`text-xs font-medium ${keepAwake ? 'text-primary-500' : 'text-gray-400'}`}>
+                <Text 
+                  className="text-xs font-medium"
+                  style={{ color: keepAwake ? (isDark ? '#EA7C69' : '#EA4335') : (isDark ? '#ABBBC2' : '#9CA3AF') }}
+                >
                   {keepAwake ? 'ON' : 'OFF'}
                 </Text>
               </TouchableOpacity>
@@ -204,9 +260,17 @@ export default function RecipeDetailScreen() {
               {recipe.tags.map((tag, index) => (
                 <View
                   key={index}
-                  className="bg-primary-50 px-3 py-1 rounded-full border border-primary-100"
+                  className="px-3 py-1 rounded-full"
+                  style={{ 
+                    backgroundColor: isDark ? '#252836' : '#FEF2F2',
+                    borderWidth: 1,
+                    borderColor: isDark ? '#393C49' : '#FEE2E2',
+                  }}
                 >
-                  <Text className="text-primary-500 text-sm font-medium">
+                  <Text 
+                    className="text-sm font-medium"
+                    style={{ color: isDark ? '#EA7C69' : '#EA4335' }}
+                  >
                     {tag}
                   </Text>
                 </View>
@@ -216,42 +280,58 @@ export default function RecipeDetailScreen() {
             {/* Nutrition & Time Row */}
             <View className="flex-row gap-3 mb-6">
               {/* Macro Wheel - takes ~60% */}
-              <View className="flex-[3] bg-white rounded-2xl p-4 shadow-md">
-                <Text className="text-base font-semibold text-gray-900 mb-3">
-                  Nutrition <Text className="text-xs font-normal text-gray-400">(per serving)</Text>
+              <View 
+                className="flex-[3] rounded-2xl p-4 shadow-md"
+                style={{ backgroundColor: isDark ? '#252836' : 'white' }}
+              >
+                <Text 
+                  className="text-base font-semibold mb-3"
+                  style={{ color: isDark ? '#FFFFFF' : '#111827' }}
+                >
+                  Nutrition <Text className="text-xs font-normal" style={{ color: isDark ? '#ABBBC2' : '#9CA3AF' }}>(per serving)</Text>
                 </Text>
                 <MacroWheel
                   macros={recipe.macros}
                   size={100}
                   showLegend={true}
+                  isDark={isDark}
                 />
               </View>
 
               {/* Prep/Cook Time - takes ~40% */}
               <View className="flex-[2] gap-3">
                 {recipe.prepTime ? (
-                  <View className="flex-1 bg-white rounded-xl p-3 items-center justify-center shadow-md">
+                  <View 
+                    className="flex-1 rounded-xl p-3 items-center justify-center shadow-md"
+                    style={{ backgroundColor: isDark ? '#252836' : 'white' }}
+                  >
                     <Text className="text-xl mb-1">⏱️</Text>
-                    <Text className="text-gray-500 text-xs">Prep</Text>
-                    <Text className="text-gray-900 font-semibold">
+                    <Text className="text-xs" style={{ color: isDark ? '#ABBBC2' : '#6B7280' }}>Prep</Text>
+                    <Text className="font-semibold" style={{ color: isDark ? '#FFFFFF' : '#111827' }}>
                       {recipe.prepTime}m
                     </Text>
                   </View>
                 ) : null}
                 {recipe.cookTime !== undefined && recipe.cookTime > 0 ? (
-                  <View className="flex-1 bg-white rounded-xl p-3 items-center justify-center shadow-md">
+                  <View 
+                    className="flex-1 rounded-xl p-3 items-center justify-center shadow-md"
+                    style={{ backgroundColor: isDark ? '#252836' : 'white' }}
+                  >
                     <Text className="text-xl mb-1">🍳</Text>
-                    <Text className="text-gray-500 text-xs">Cook</Text>
-                    <Text className="text-gray-900 font-semibold">
+                    <Text className="text-xs" style={{ color: isDark ? '#ABBBC2' : '#6B7280' }}>Cook</Text>
+                    <Text className="font-semibold" style={{ color: isDark ? '#FFFFFF' : '#111827' }}>
                       {recipe.cookTime}m
                     </Text>
                   </View>
                 ) : null}
                 {!recipe.prepTime && (!recipe.cookTime || recipe.cookTime === 0) && (
-                  <View className="flex-1 bg-white rounded-xl p-3 items-center justify-center shadow-md">
+                  <View 
+                    className="flex-1 rounded-xl p-3 items-center justify-center shadow-md"
+                    style={{ backgroundColor: isDark ? '#252836' : 'white' }}
+                  >
                     <Text className="text-xl mb-1">⏱️</Text>
-                    <Text className="text-gray-400 text-xs">No time</Text>
-                    <Text className="text-gray-400 font-semibold">—</Text>
+                    <Text className="text-xs" style={{ color: isDark ? '#ABBBC2' : '#9CA3AF' }}>No time</Text>
+                    <Text className="font-semibold" style={{ color: isDark ? '#ABBBC2' : '#9CA3AF' }}>—</Text>
                   </View>
                 )}
               </View>
@@ -259,21 +339,32 @@ export default function RecipeDetailScreen() {
 
             {/* Ingredients */}
             <View className="mb-6">
-              <Text className="text-lg font-semibold text-gray-900 mb-3">
-                Ingredients {multiplier !== 1 && <Text className="text-sm font-normal text-gray-400">({multiplier}x)</Text>}
+              <Text 
+                className="text-lg font-semibold mb-3"
+                style={{ color: isDark ? '#FFFFFF' : '#111827' }}
+              >
+                Ingredients {multiplier !== 1 && <Text className="text-sm font-normal" style={{ color: isDark ? '#ABBBC2' : '#9CA3AF' }}>({multiplier}x)</Text>}
               </Text>
-              <View className="bg-white rounded-2xl overflow-hidden shadow-md">
+              <View 
+                className="rounded-2xl overflow-hidden shadow-md"
+                style={{ backgroundColor: isDark ? '#252836' : 'white' }}
+              >
                 {recipe.ingredients.map((ingredient, index) => (
                   <View
                     key={index}
-                    className={`flex-row items-center justify-between px-4 py-3 ${
-                      index < recipe.ingredients.length - 1 ? "border-b border-gray-100" : ""
-                    }`}
+                    className="flex-row items-center justify-between px-4 py-3"
+                    style={{ 
+                      borderBottomWidth: index < recipe.ingredients.length - 1 ? 1 : 0,
+                      borderColor: isDark ? '#393C49' : '#F3F4F6',
+                    }}
                   >
-                    <Text className="text-gray-800 flex-1">
+                    <Text className="flex-1" style={{ color: isDark ? '#FFFFFF' : '#1F2937' }}>
                       {ingredient.name}
                     </Text>
-                    <Text className={`${multiplier !== 1 ? "text-orange-600 font-medium" : "text-gray-500"}`}>
+                    <Text 
+                      className={multiplier !== 1 ? "font-medium" : ""}
+                      style={{ color: multiplier !== 1 ? '#F97316' : (isDark ? '#ABBBC2' : '#6B7280') }}
+                    >
                       {formatAmount(ingredient.amount)} {ingredient.unit}
                     </Text>
                   </View>
@@ -284,11 +375,20 @@ export default function RecipeDetailScreen() {
             {/* Instructions */}
             {recipe.description && (
               <View className="mb-6">
-                <Text className="text-lg font-semibold text-gray-900 mb-3">
+                <Text 
+                  className="text-lg font-semibold mb-3"
+                  style={{ color: isDark ? '#FFFFFF' : '#111827' }}
+                >
                   Instructions
                 </Text>
-                <View className="bg-white rounded-2xl p-4 shadow-md">
-                  <Text className="text-gray-700 leading-6">
+                <View 
+                  className="rounded-2xl p-4 shadow-md"
+                  style={{ backgroundColor: isDark ? '#252836' : 'white' }}
+                >
+                  <Text 
+                    className="leading-6"
+                    style={{ color: isDark ? '#ABBBC2' : '#374151' }}
+                  >
                     {recipe.description}
                   </Text>
                 </View>

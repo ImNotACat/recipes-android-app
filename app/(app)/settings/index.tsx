@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useRouter } from "expo-router";
 import { useSession } from "../../../src/hooks/useSession";
+import { useTheme } from "../../../src/providers/ThemeProvider";
 import { 
   useHousehold, 
   useHouseholdMembers,
@@ -23,6 +24,7 @@ import {
 export default function SettingsScreen() {
   const router = useRouter();
   const { user } = useSession();
+  const { theme, isDark, setTheme } = useTheme();
   const { data: household, isLoading: isLoadingHousehold } = useHousehold();
   const { data: members = [] } = useHouseholdMembers(household?.id);
   
@@ -110,69 +112,191 @@ export default function SettingsScreen() {
           gestureDirection: "horizontal",
         }}
       />
-      <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
+      <SafeAreaView 
+        className="flex-1" 
+        style={{ backgroundColor: isDark ? '#1F1D2B' : 'white' }}
+        edges={["top"]}
+      >
         {/* Header */}
-        <View className="flex-row items-center px-6 py-4 border-b border-gray-100">
+        <View 
+          className="flex-row items-center px-6 py-4 border-b"
+          style={{ borderColor: isDark ? '#393C49' : '#F3F4F6' }}
+        >
           <TouchableOpacity onPress={() => router.back()}>
-            <Text className="text-lg">←</Text>
+            <Text className="text-lg" style={{ color: isDark ? '#ABBBC2' : '#111827' }}>←</Text>
           </TouchableOpacity>
-          <Text className="text-lg font-semibold text-gray-900 ml-4">Settings</Text>
+          <Text 
+            className="text-lg font-semibold ml-4"
+            style={{ color: isDark ? '#FFFFFF' : '#111827' }}
+          >
+            Settings
+          </Text>
         </View>
 
         <ScrollView className="flex-1" contentContainerClassName="px-6 py-6">
+          {/* Appearance */}
+          <View className="mb-8">
+            <Text 
+              className="text-sm font-medium uppercase tracking-wider mb-3"
+              style={{ color: isDark ? '#ABBBC2' : '#9CA3AF' }}
+            >
+              Appearance
+            </Text>
+            <View 
+              className="rounded-2xl p-4"
+              style={{ backgroundColor: isDark ? '#252836' : '#F9FAFB' }}
+            >
+              <Text 
+                className="font-medium mb-3"
+                style={{ color: isDark ? '#FFFFFF' : '#111827' }}
+              >
+                Theme
+              </Text>
+              <View className="flex-row gap-2">
+                <TouchableOpacity
+                  className="flex-1 py-3 rounded-xl items-center"
+                  style={{ 
+                    backgroundColor: theme === 'light' 
+                      ? (isDark ? '#EA7C69' : '#EA4335')
+                      : (isDark ? '#393C49' : '#E5E7EB')
+                  }}
+                  onPress={() => setTheme('light')}
+                >
+                  <Text 
+                    className="font-medium"
+                    style={{ color: theme === 'light' ? '#FFFFFF' : (isDark ? '#ABBBC2' : '#6B7280') }}
+                  >
+                    ☀️ Light
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  className="flex-1 py-3 rounded-xl items-center"
+                  style={{ 
+                    backgroundColor: theme === 'dark' 
+                      ? (isDark ? '#EA7C69' : '#EA4335')
+                      : (isDark ? '#393C49' : '#E5E7EB')
+                  }}
+                  onPress={() => setTheme('dark')}
+                >
+                  <Text 
+                    className="font-medium"
+                    style={{ color: theme === 'dark' ? '#FFFFFF' : (isDark ? '#ABBBC2' : '#6B7280') }}
+                  >
+                    🌙 Dark
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  className="flex-1 py-3 rounded-xl items-center"
+                  style={{ 
+                    backgroundColor: theme === 'system' 
+                      ? (isDark ? '#EA7C69' : '#EA4335')
+                      : (isDark ? '#393C49' : '#E5E7EB')
+                  }}
+                  onPress={() => setTheme('system')}
+                >
+                  <Text 
+                    className="font-medium"
+                    style={{ color: theme === 'system' ? '#FFFFFF' : (isDark ? '#ABBBC2' : '#6B7280') }}
+                  >
+                    📱 Auto
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+
           {/* User Info */}
           <View className="mb-8">
-            <Text className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-3">
+            <Text 
+              className="text-sm font-medium uppercase tracking-wider mb-3"
+              style={{ color: isDark ? '#ABBBC2' : '#9CA3AF' }}
+            >
               Account
             </Text>
-            <View className="bg-gray-50 rounded-2xl p-4">
-              <Text className="text-gray-900 font-medium">
+            <View 
+              className="rounded-2xl p-4"
+              style={{ backgroundColor: isDark ? '#252836' : '#F9FAFB' }}
+            >
+              <Text 
+                className="font-medium"
+                style={{ color: isDark ? '#FFFFFF' : '#111827' }}
+              >
                 {user?.user_metadata?.full_name || "User"}
               </Text>
-              <Text className="text-gray-400 text-sm">{user?.email}</Text>
+              <Text style={{ color: isDark ? '#ABBBC2' : '#9CA3AF' }} className="text-sm">
+                {user?.email}
+              </Text>
             </View>
           </View>
 
           {/* Household Section */}
           <View className="mb-8">
-            <Text className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-3">
+            <Text 
+              className="text-sm font-medium uppercase tracking-wider mb-3"
+              style={{ color: isDark ? '#ABBBC2' : '#9CA3AF' }}
+            >
               Household
             </Text>
             
             {isLoadingHousehold ? (
-              <View className="bg-gray-50 rounded-2xl p-6 items-center">
-                <ActivityIndicator color="#EA4335" />
+              <View 
+                className="rounded-2xl p-6 items-center"
+                style={{ backgroundColor: isDark ? '#252836' : '#F9FAFB' }}
+              >
+                <ActivityIndicator color={isDark ? '#EA7C69' : '#EA4335'} />
               </View>
             ) : household ? (
               // User is in a household
-              <View className="bg-gray-50 rounded-2xl p-4">
+              <View 
+                className="rounded-2xl p-4"
+                style={{ backgroundColor: isDark ? '#252836' : '#F9FAFB' }}
+              >
                 <View className="flex-row items-center justify-between mb-4">
                   <View>
-                    <Text className="text-gray-900 font-semibold text-lg">
+                    <Text 
+                      className="font-semibold text-lg"
+                      style={{ color: isDark ? '#FFFFFF' : '#111827' }}
+                    >
                       {household.name}
                     </Text>
-                    <Text className="text-gray-400 text-sm">
+                    <Text style={{ color: isDark ? '#ABBBC2' : '#9CA3AF' }} className="text-sm">
                       {members.length} member{members.length !== 1 ? "s" : ""}
                     </Text>
                   </View>
-                  <View className="bg-primary-100 px-3 py-1 rounded-full">
-                    <Text className="text-primary-600 text-sm font-medium">
+                  <View 
+                    className="px-3 py-1 rounded-full"
+                    style={{ backgroundColor: isDark ? 'rgba(234, 124, 105, 0.2)' : '#FEE2E2' }}
+                  >
+                    <Text 
+                      className="text-sm font-medium"
+                      style={{ color: isDark ? '#EA7C69' : '#DC2626' }}
+                    >
                       {members.find(m => m.user_id === user?.id)?.role === "owner" ? "Owner" : "Member"}
                     </Text>
                   </View>
                 </View>
 
                 {/* Invite Code */}
-                <View className="bg-white rounded-xl p-3 mb-4">
-                  <Text className="text-gray-400 text-xs uppercase tracking-wider mb-1">
+                <View 
+                  className="rounded-xl p-3 mb-4"
+                  style={{ backgroundColor: isDark ? '#1F1D2B' : 'white' }}
+                >
+                  <Text 
+                    className="text-xs uppercase tracking-wider mb-1"
+                    style={{ color: isDark ? '#ABBBC2' : '#9CA3AF' }}
+                  >
                     Invite Code
                   </Text>
                   <View className="flex-row items-center justify-between">
-                    <Text className="text-gray-900 font-mono text-lg font-semibold tracking-widest">
+                    <Text 
+                      className="font-mono text-lg font-semibold tracking-widest"
+                      style={{ color: isDark ? '#FFFFFF' : '#111827' }}
+                    >
                       {household.invite_code.toUpperCase()}
                     </Text>
                     <TouchableOpacity 
-                      className="bg-primary-500 px-3 py-1.5 rounded-lg"
+                      className="px-3 py-1.5 rounded-lg"
+                      style={{ backgroundColor: isDark ? '#EA7C69' : '#EA4335' }}
                       onPress={handleShareInviteCode}
                     >
                       <Text className="text-white text-sm font-medium">Share</Text>
@@ -182,24 +306,39 @@ export default function SettingsScreen() {
 
                 {/* Members List */}
                 <View className="mb-4">
-                  <Text className="text-gray-500 text-sm mb-2">Members</Text>
+                  <Text 
+                    className="text-sm mb-2"
+                    style={{ color: isDark ? '#ABBBC2' : '#6B7280' }}
+                  >
+                    Members
+                  </Text>
                   {members.map((member, index) => (
                     <View 
                       key={member.id}
-                      className={`flex-row items-center py-2 ${
-                        index < members.length - 1 ? "border-b border-gray-100" : ""
-                      }`}
+                      className="flex-row items-center py-2"
+                      style={{ 
+                        borderBottomWidth: index < members.length - 1 ? 1 : 0,
+                        borderColor: isDark ? '#393C49' : '#F3F4F6'
+                      }}
                     >
-                      <View className="w-8 h-8 bg-primary-100 rounded-full items-center justify-center mr-3">
-                        <Text className="text-primary-500">👤</Text>
+                      <View 
+                        className="w-8 h-8 rounded-full items-center justify-center mr-3"
+                        style={{ backgroundColor: isDark ? 'rgba(234, 124, 105, 0.2)' : '#FEE2E2' }}
+                      >
+                        <Text>👤</Text>
                       </View>
                       <View className="flex-1">
-                        <Text className="text-gray-800">
+                        <Text style={{ color: isDark ? '#FFFFFF' : '#1F2937' }}>
                           {member.user_id === user?.id ? "You" : `Member`}
                         </Text>
                       </View>
                       {member.role === "owner" && (
-                        <Text className="text-gray-400 text-xs">Owner</Text>
+                        <Text 
+                          className="text-xs"
+                          style={{ color: isDark ? '#ABBBC2' : '#9CA3AF' }}
+                        >
+                          Owner
+                        </Text>
                       )}
                     </View>
                   ))}
@@ -212,9 +351,14 @@ export default function SettingsScreen() {
                   disabled={leaveHousehold.isPending}
                 >
                   {leaveHousehold.isPending ? (
-                    <ActivityIndicator color="#EA4335" size="small" />
+                    <ActivityIndicator color={isDark ? '#EA7C69' : '#EA4335'} size="small" />
                   ) : (
-                    <Text className="text-primary-500 font-medium">Leave Household</Text>
+                    <Text 
+                      className="font-medium"
+                      style={{ color: isDark ? '#EA7C69' : '#EA4335' }}
+                    >
+                      Leave Household
+                    </Text>
                   )}
                 </TouchableOpacity>
               </View>
@@ -222,47 +366,81 @@ export default function SettingsScreen() {
               // User not in a household
               <View>
                 {!showCreateForm && !showJoinForm ? (
-                  <View className="bg-gray-50 rounded-2xl p-6">
-                    <Text className="text-gray-700 text-center mb-4">
+                  <View 
+                    className="rounded-2xl p-6"
+                    style={{ backgroundColor: isDark ? '#252836' : '#F9FAFB' }}
+                  >
+                    <Text 
+                      className="text-center mb-4"
+                      style={{ color: isDark ? '#ABBBC2' : '#374151' }}
+                    >
                       Join or create a household to share recipes with family members.
                     </Text>
                     <View className="flex-row gap-3">
                       <TouchableOpacity 
-                        className="flex-1 bg-primary-500 py-3 rounded-xl items-center"
+                        className="flex-1 py-3 rounded-xl items-center"
+                        style={{ backgroundColor: isDark ? '#EA7C69' : '#EA4335' }}
                         onPress={() => setShowCreateForm(true)}
                       >
                         <Text className="text-white font-semibold">Create</Text>
                       </TouchableOpacity>
                       <TouchableOpacity 
-                        className="flex-1 bg-gray-200 py-3 rounded-xl items-center"
+                        className="flex-1 py-3 rounded-xl items-center"
+                        style={{ backgroundColor: isDark ? '#393C49' : '#E5E7EB' }}
                         onPress={() => setShowJoinForm(true)}
                       >
-                        <Text className="text-gray-700 font-semibold">Join</Text>
+                        <Text 
+                          className="font-semibold"
+                          style={{ color: isDark ? '#ABBBC2' : '#374151' }}
+                        >
+                          Join
+                        </Text>
                       </TouchableOpacity>
                     </View>
                   </View>
                 ) : showCreateForm ? (
-                  <View className="bg-gray-50 rounded-2xl p-4">
-                    <Text className="text-gray-900 font-semibold mb-3">Create Household</Text>
+                  <View 
+                    className="rounded-2xl p-4"
+                    style={{ backgroundColor: isDark ? '#252836' : '#F9FAFB' }}
+                  >
+                    <Text 
+                      className="font-semibold mb-3"
+                      style={{ color: isDark ? '#FFFFFF' : '#111827' }}
+                    >
+                      Create Household
+                    </Text>
                     <TextInput
-                      className="bg-white rounded-xl px-4 py-3 text-gray-900 border border-gray-200 mb-3"
+                      className="rounded-xl px-4 py-3 mb-3"
+                      style={{ 
+                        backgroundColor: isDark ? '#1F1D2B' : 'white',
+                        borderWidth: 1,
+                        borderColor: isDark ? '#393C49' : '#E5E7EB',
+                        color: isDark ? '#FFFFFF' : '#111827'
+                      }}
                       placeholder="Household name (e.g., Smith Family)"
                       value={householdName}
                       onChangeText={setHouseholdName}
-                      placeholderTextColor="#9CA3AF"
+                      placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
                     />
                     <View className="flex-row gap-3">
                       <TouchableOpacity 
-                        className="flex-1 bg-gray-200 py-3 rounded-xl items-center"
+                        className="flex-1 py-3 rounded-xl items-center"
+                        style={{ backgroundColor: isDark ? '#393C49' : '#E5E7EB' }}
                         onPress={() => {
                           setShowCreateForm(false);
                           setHouseholdName("");
                         }}
                       >
-                        <Text className="text-gray-700 font-medium">Cancel</Text>
+                        <Text 
+                          className="font-medium"
+                          style={{ color: isDark ? '#ABBBC2' : '#374151' }}
+                        >
+                          Cancel
+                        </Text>
                       </TouchableOpacity>
                       <TouchableOpacity 
-                        className="flex-1 bg-primary-500 py-3 rounded-xl items-center"
+                        className="flex-1 py-3 rounded-xl items-center"
+                        style={{ backgroundColor: isDark ? '#EA7C69' : '#EA4335' }}
                         onPress={handleCreateHousehold}
                         disabled={createHousehold.isPending}
                       >
@@ -275,29 +453,50 @@ export default function SettingsScreen() {
                     </View>
                   </View>
                 ) : (
-                  <View className="bg-gray-50 rounded-2xl p-4">
-                    <Text className="text-gray-900 font-semibold mb-3">Join Household</Text>
+                  <View 
+                    className="rounded-2xl p-4"
+                    style={{ backgroundColor: isDark ? '#252836' : '#F9FAFB' }}
+                  >
+                    <Text 
+                      className="font-semibold mb-3"
+                      style={{ color: isDark ? '#FFFFFF' : '#111827' }}
+                    >
+                      Join Household
+                    </Text>
                     <TextInput
-                      className="bg-white rounded-xl px-4 py-3 text-gray-900 border border-gray-200 mb-3 font-mono tracking-widest text-center text-lg"
+                      className="rounded-xl px-4 py-3 mb-3 font-mono tracking-widest text-center text-lg"
+                      style={{ 
+                        backgroundColor: isDark ? '#1F1D2B' : 'white',
+                        borderWidth: 1,
+                        borderColor: isDark ? '#393C49' : '#E5E7EB',
+                        color: isDark ? '#FFFFFF' : '#111827'
+                      }}
                       placeholder="Enter invite code"
                       value={inviteCode}
                       onChangeText={setInviteCode}
-                      placeholderTextColor="#9CA3AF"
+                      placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
                       autoCapitalize="characters"
                       maxLength={8}
                     />
                     <View className="flex-row gap-3">
                       <TouchableOpacity 
-                        className="flex-1 bg-gray-200 py-3 rounded-xl items-center"
+                        className="flex-1 py-3 rounded-xl items-center"
+                        style={{ backgroundColor: isDark ? '#393C49' : '#E5E7EB' }}
                         onPress={() => {
                           setShowJoinForm(false);
                           setInviteCode("");
                         }}
                       >
-                        <Text className="text-gray-700 font-medium">Cancel</Text>
+                        <Text 
+                          className="font-medium"
+                          style={{ color: isDark ? '#ABBBC2' : '#374151' }}
+                        >
+                          Cancel
+                        </Text>
                       </TouchableOpacity>
                       <TouchableOpacity 
-                        className="flex-1 bg-primary-500 py-3 rounded-xl items-center"
+                        className="flex-1 py-3 rounded-xl items-center"
+                        style={{ backgroundColor: isDark ? '#EA7C69' : '#EA4335' }}
                         onPress={handleJoinHousehold}
                         disabled={joinHousehold.isPending}
                       >

@@ -6,6 +6,7 @@ import { View, ActivityIndicator } from "react-native";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "../src/lib/queryClient";
 import { AuthProvider, useAuth } from "../src/providers/AuthProvider";
+import { ThemeProvider, useTheme } from "../src/providers/ThemeProvider";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import * as SplashScreen from "expo-splash-screen";
 import { useFonts, Lobster_400Regular } from "@expo-google-fonts/lobster";
@@ -15,6 +16,7 @@ SplashScreen.preventAutoHideAsync();
 
 function RootLayoutNav() {
   const { session, isLoading } = useAuth();
+  const { isDark } = useTheme();
   const segments = useSegments();
   const router = useRouter();
 
@@ -40,8 +42,8 @@ function RootLayoutNav() {
 
   if (isLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "white" }}>
-        <ActivityIndicator size="large" color="#ef4444" />
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: isDark ? "#1F1D2B" : "white" }}>
+        <ActivityIndicator size="large" color="#EA7C69" />
       </View>
     );
   }
@@ -49,7 +51,7 @@ function RootLayoutNav() {
   return (
     <>
       <Slot />
-      <StatusBar style="auto" />
+      <StatusBar style={isDark ? "light" : "dark"} />
     </>
   );
 }
@@ -65,11 +67,13 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <RootLayoutNav />
-        </AuthProvider>
-      </QueryClientProvider>
+      <ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <RootLayoutNav />
+          </AuthProvider>
+        </QueryClientProvider>
+      </ThemeProvider>
     </GestureHandlerRootView>
   );
 }

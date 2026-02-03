@@ -1,4 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import * as FileSystem from "expo-file-system";
+import * as ImageManipulator from "expo-image-manipulator";
 import { supabase } from "../lib/supabase";
 import { Recipe, Ingredient, Macros, calculateCalories } from "../types/recipe";
 
@@ -83,21 +85,35 @@ async function uploadImage(uri: string, userId: string): Promise<string | null> 
     const ext = uri.split(".").pop()?.toLowerCase() || "jpg";
     const fileName = `${userId}/${Date.now()}.${ext}`;
 
-    // Fetch the image as a blob
-    const response = await fetch(uri);
-    const blob = await response.blob();
+    // Resize image for optimization
+    const resizedImage = await ImageManipulator.manipulateAsync(
+      uri,
+      [{ resize: { width: 800, height: 600 } }],
+      {
+        compress: 0.75,
+        format: ImageManipulator.SaveFormat.JPEG,
+      }
+    );
 
-    // Upload to Supabase Storage
+    // Create FormData to send the resized file
+    const formData = new FormData();
+    formData.append("file", {
+      uri: resizedImage.uri,
+      name: fileName,
+      type: `image/jpeg`,
+    } as any);
+
+    // Upload using Supabase
     const { data, error } = await supabase.storage
       .from("recipe-images")
-      .upload(fileName, blob, {
-        contentType: `image/${ext}`,
+      .upload(fileName, formData as any, {
+        contentType: "image/jpeg",
         upsert: false,
       });
 
     if (error) {
       console.error("Error uploading image:", error);
-      return null;
+      throw error;
     }
 
     // Get public URL

@@ -8,18 +8,40 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        // Primary coral red from the design
         primary: {
-          50: '#fef2f2',
-          100: '#fee2e2',
-          200: '#fecaca',
-          300: '#fca5a5',
-          400: '#f87171',
-          500: '#ef4444',
-          600: '#dc2626',
-          700: '#b91c1c',
-          800: '#991b1b',
-          900: '#7f1d1d',
+          50: '#FEF2F2',
+          100: '#FEE2E2',
+          200: '#FDCFCF',
+          300: '#FCB0B0',
+          400: '#F87171',
+          500: '#EA4335',  // Main brand color
+          600: '#DC2626',
+          700: '#B91C1C',
+          800: '#991B1B',
+          900: '#7F1D1D',
         },
+        // Neutral grays
+        gray: {
+          50: '#F9FAFB',
+          100: '#F3F4F6',
+          200: '#E5E7EB',
+          300: '#D1D5DB',
+          400: '#9CA3AF',
+          500: '#6B7280',
+          600: '#4B5563',
+          700: '#374151',
+          800: '#1F2937',
+          900: '#111827',
+        },
+      },
+      borderRadius: {
+        'xl': '12px',
+        '2xl': '16px',
+        '3xl': '24px',
+      },
+      fontFamily: {
+        sans: ['System', 'sans-serif'],
       },
     },
   },

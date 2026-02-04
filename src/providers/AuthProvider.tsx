@@ -61,7 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (Platform.OS === "web") {
         // Use a simple web redirect flow: build a redirect URI to our app
         // and ask Supabase for the OAuth URL, then navigate there.
-        const redirectUri = `${window.location.origin}/(auth)/callback`;
+        const redirectUri = `${window.location.origin}/auth/callback`;
 
         const { data, error } = await supabase.auth.signInWithOAuth({
           provider: "google",

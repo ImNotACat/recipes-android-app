@@ -17,6 +17,14 @@ interface ImportedRecipe {
   cookTime?: number;
 }
 
+function errorResponse(message: string, status = 500) {
+  console.error("Error:", message);
+  return new Response(
+    JSON.stringify({ error: message }),
+    { status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+  );
+}
+
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
@@ -24,47 +32,51 @@ serve(async (req) => {
   }
 
   try {
-    const { url } = await req.json();
+    let body;
+    try {
+      body = await req.json();
+    } catch (e) {
+      return errorResponse("Invalid JSON in request body", 400);
+    }
+
+    const { url } = body;
 
     if (!url) {
-      return new Response(
-        JSON.stringify({ error: "URL is required" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return errorResponse("URL is required", 400);
     }
 
     // Validate URL format
-    let parsedUrl: URL;
     try {
-      parsedUrl = new URL(url);
+      new URL(url);
     } catch {
-      return new Response(
-        JSON.stringify({ error: "Invalid URL format" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return errorResponse("Invalid URL format", 400);
     }
 
     // Fetch the webpage content
     console.log(`Fetching URL: ${url}`);
-    const pageResponse = await fetch(url, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.9",
-      },
-    });
+    let pageResponse;
+    try {
+      pageResponse = await fetch(url, {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+          "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+          "Accept-Language": "en-US,en;q=0.9",
+        },
+      });
+    } catch (fetchError) {
+      return errorResponse(`Failed to fetch URL: ${fetchError.message}`);
+    }
 
     if (!pageResponse.ok) {
-      return new Response(
-        JSON.stringify({ error: `Failed to fetch URL: ${pageResponse.status}` }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return errorResponse(`Failed to fetch URL: HTTP ${pageResponse.status}`, 400);
     }
 
     const html = await pageResponse.text();
+    console.log(`Fetched ${html.length} characters of HTML`);
 
     // Extract text content from HTML (basic extraction)
     const textContent = extractTextFromHtml(html);
+    console.log(`Extracted ${textContent.length} characters of text`);
     
     // Limit content length for API call (Gemini has token limits)
     const truncatedContent = textContent.slice(0, 30000);
@@ -72,24 +84,20 @@ serve(async (req) => {
     // Call Gemini API to extract recipe
     const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
     if (!GEMINI_API_KEY) {
-      return new Response(
-        JSON.stringify({ error: "Gemini API key not configured" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return errorResponse("Gemini API key not configured");
     }
 
+    console.log("Calling Gemini API...");
     const recipe = await extractRecipeWithGemini(truncatedContent, html, GEMINI_API_KEY);
+    console.log("Successfully extracted recipe:", recipe.name);
 
     return new Response(
       JSON.stringify({ recipe }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
-    console.error("Error importing recipe:", error);
-    return new Response(
-      JSON.stringify({ error: error.message || "Failed to import recipe" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    const message = error instanceof Error ? error.message : "Unknown error occurred";
+    return errorResponse(message);
   }
 });
 
@@ -147,7 +155,7 @@ async function extractRecipeWithGemini(
 
   const prompt = `You are a recipe extraction assistant. Extract the recipe information from the following webpage content.
 
-Return a JSON object with EXACTLY this structure (no markdown, just raw JSON):
+Return ONLY a valid JSON object with this structure (no markdown formatting, no code blocks, just the raw JSON):
 {
   "name": "Recipe Name",
   "instructions": "Step-by-step cooking instructions as a single string with numbered steps",
@@ -168,13 +176,16 @@ Important rules:
 4. Times should be in minutes.
 5. Instructions should be clear, numbered steps as a single string.
 6. If information is not available, use reasonable defaults or null for optional fields.
+7. IMPORTANT: Return ONLY the JSON object, no other text.
 
 Webpage content:
 ${textContent}`;
 
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-    {
+  const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+  
+  let response;
+  try {
+    response = await fetch(geminiUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -186,28 +197,43 @@ ${textContent}`;
           },
         ],
         generationConfig: {
-          temperature: 0.2,
-          topK: 40,
-          topP: 0.95,
+          temperature: 0.1,
           maxOutputTokens: 4096,
         },
       }),
-    }
-  );
+    });
+  } catch (fetchError) {
+    throw new Error(`Failed to call Gemini API: ${fetchError.message}`);
+  }
 
   if (!response.ok) {
     const errorText = await response.text();
-    console.error("Gemini API error:", errorText);
-    throw new Error(`Gemini API error: ${response.status}`);
+    console.error("Gemini API error response:", errorText);
+    throw new Error(`Gemini API error: ${response.status} - ${errorText.slice(0, 200)}`);
   }
 
-  const data = await response.json();
+  let data;
+  try {
+    data = await response.json();
+  } catch (e) {
+    throw new Error("Failed to parse Gemini API response as JSON");
+  }
   
+  console.log("Gemini response structure:", JSON.stringify(Object.keys(data)));
+  
+  // Check for blocked content or errors
+  if (data.promptFeedback?.blockReason) {
+    throw new Error(`Content blocked by Gemini: ${data.promptFeedback.blockReason}`);
+  }
+
   // Extract the text response
   const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
   if (!generatedText) {
-    throw new Error("No response from Gemini");
+    console.error("Unexpected Gemini response structure:", JSON.stringify(data).slice(0, 500));
+    throw new Error("No text content in Gemini response");
   }
+
+  console.log("Raw Gemini output (first 500 chars):", generatedText.slice(0, 500));
 
   // Parse the JSON from the response (handle potential markdown code blocks)
   let jsonString = generatedText.trim();
@@ -227,8 +253,8 @@ ${textContent}`;
   try {
     recipe = JSON.parse(jsonString);
   } catch (parseError) {
-    console.error("Failed to parse Gemini response:", jsonString);
-    throw new Error("Failed to parse recipe data from AI response");
+    console.error("Failed to parse JSON. Raw string:", jsonString.slice(0, 1000));
+    throw new Error(`Failed to parse recipe data from AI response: ${parseError.message}`);
   }
 
   // Validate and clean up the recipe
@@ -240,7 +266,7 @@ ${textContent}`;
     ingredients: Array.isArray(recipe.ingredients) 
       ? recipe.ingredients.map(ing => ({
           name: ing.name || "",
-          amount: typeof ing.amount === "number" ? ing.amount : parseFloat(ing.amount) || 1,
+          amount: typeof ing.amount === "number" ? ing.amount : parseFloat(String(ing.amount)) || 1,
           unit: ing.unit || "piece",
         }))
       : [],

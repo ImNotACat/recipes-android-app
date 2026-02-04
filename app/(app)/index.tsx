@@ -224,24 +224,25 @@ export default function HomeScreen() {
                   </TouchableOpacity>
                   
                   {/* Dark Mode Toggle */}
-                  <View 
+                  <TouchableOpacity
                     className="flex-row items-center justify-between px-4 py-3"
                     style={{ 
                       backgroundColor: isDark ? '#252836' : 'white',
                       borderTopWidth: 1, 
                       borderColor: isDark ? '#393C49' : '#F3F4F6' 
                     }}
+                    activeOpacity={0.8}
+                    onPress={() => setTheme(isDark ? 'light' : 'dark')}
                   >
                     <View className="flex-row items-center">
                       <Text className="text-lg mr-3">{isDark ? '🌙' : '☀️'}</Text>
                       <Text style={{ color: isDark ? '#ABBBC2' : '#374151' }}>Dark Mode</Text>
                     </View>
-                    <TouchableOpacity
+                    <View
                       className="px-3 py-1 rounded-full"
                       style={{ 
                         backgroundColor: isDark ? '#EA7C69' : '#F3F4F6',
                       }}
-                      onPress={() => setTheme(isDark ? 'light' : 'dark')}
                     >
                       <Text 
                         className="text-xs font-medium"
@@ -249,8 +250,8 @@ export default function HomeScreen() {
                       >
                         {isDark ? 'ON' : 'OFF'}
                       </Text>
-                    </TouchableOpacity>
-                  </View>
+                    </View>
+                  </TouchableOpacity>
                   
                   <TouchableOpacity 
                     className="flex-row items-center px-4 py-3"

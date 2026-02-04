@@ -24,6 +24,7 @@ export default function HomeScreen() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCalorieRanges, setSelectedCalorieRanges] = useState<number[]>([]);
+  const [showAddMenu, setShowAddMenu] = useState(false);
 
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) =>
@@ -302,11 +303,107 @@ export default function HomeScreen() {
               <TouchableOpacity 
                 className="w-12 h-12 rounded-full items-center justify-center"
                 style={{ backgroundColor: isDark ? '#EA7C69' : '#EA4335' }}
-                onPress={() => router.push("/recipe/add")}
+                onPress={() => setShowAddMenu(true)}
               >
                 <Text className="text-white text-2xl font-light">+</Text>
               </TouchableOpacity>
             </View>
+
+            {/* Add Recipe Menu Modal */}
+            <Modal
+              visible={showAddMenu}
+              transparent
+              animationType="fade"
+              onRequestClose={() => setShowAddMenu(false)}
+            >
+              <Pressable 
+                className="flex-1 justify-end"
+                style={{ backgroundColor: 'rgba(0,0,0,0.4)' }}
+                onPress={() => setShowAddMenu(false)}
+              >
+                <Pressable 
+                  onPress={(e) => e.stopPropagation()}
+                >
+                  <View 
+                    className="rounded-t-3xl px-6 pb-8 pt-4"
+                    style={{ backgroundColor: isDark ? '#252836' : 'white' }}
+                  >
+                    <View 
+                      className="w-12 h-1 rounded-full self-center mb-4"
+                      style={{ backgroundColor: isDark ? '#393C49' : '#D1D5DB' }}
+                    />
+                    <Text 
+                      className="text-lg font-semibold text-center mb-4"
+                      style={{ color: isDark ? '#FFFFFF' : '#111827' }}
+                    >
+                      Add Recipe
+                    </Text>
+                    
+                    <TouchableOpacity
+                      className="rounded-xl py-4 px-4 mb-3 flex-row items-center"
+                      style={{ backgroundColor: isDark ? '#1F1D2B' : '#F9FAFB' }}
+                      onPress={() => {
+                        setShowAddMenu(false);
+                        router.push("/recipe/add");
+                      }}
+                    >
+                      <Text className="text-2xl mr-3">✏️</Text>
+                      <View>
+                        <Text 
+                          className="font-medium"
+                          style={{ color: isDark ? '#FFFFFF' : '#111827' }}
+                        >
+                          Add Manually
+                        </Text>
+                        <Text 
+                          className="text-sm"
+                          style={{ color: isDark ? '#ABBBC2' : '#6B7280' }}
+                        >
+                          Enter recipe details yourself
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity
+                      className="rounded-xl py-4 px-4 mb-3 flex-row items-center"
+                      style={{ backgroundColor: isDark ? '#1F1D2B' : '#F9FAFB' }}
+                      onPress={() => {
+                        setShowAddMenu(false);
+                        router.push("/recipe/import");
+                      }}
+                    >
+                      <Text className="text-2xl mr-3">🌐</Text>
+                      <View>
+                        <Text 
+                          className="font-medium"
+                          style={{ color: isDark ? '#FFFFFF' : '#111827' }}
+                        >
+                          Import from URL
+                        </Text>
+                        <Text 
+                          className="text-sm"
+                          style={{ color: isDark ? '#ABBBC2' : '#6B7280' }}
+                        >
+                          Paste a recipe link to auto-fill
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity
+                      className="py-4 px-4"
+                      onPress={() => setShowAddMenu(false)}
+                    >
+                      <Text 
+                        className="font-medium text-center"
+                        style={{ color: isDark ? '#ABBBC2' : '#6B7280' }}
+                      >
+                        Cancel
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </Pressable>
+              </Pressable>
+            </Modal>
           </View>
 
           {/* Main Category Pills (fixed) */}

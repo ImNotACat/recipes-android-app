@@ -232,10 +232,16 @@ export function useCreateRecipe() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      // Upload image if provided
+      // Handle image - either keep URL or upload local file
       let imageUrl: string | null = null;
       if (input.imageUri) {
-        imageUrl = await uploadImage(input.imageUri, user.id);
+        if (input.imageUri.startsWith("http")) {
+          // Keep existing URL (e.g., from imported recipes)
+          imageUrl = input.imageUri;
+        } else {
+          // Upload local image file
+          imageUrl = await uploadImage(input.imageUri, user.id);
+        }
       }
 
       // Calculate calories if not provided

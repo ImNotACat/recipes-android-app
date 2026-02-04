@@ -57,11 +57,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithGoogle = useCallback(async () => {
     try {
-      // For Expo Go, we need special handling
-      // Use the Supabase project URL as the redirect, then extract tokens
+      // Handle web and native flows separately.
+      if (Platform.OS === "web") {
+        // Use a simple web redirect flow: build a redirect URI to our app
+        // and ask Supabase for the OAuth URL, then navigate there.
+        const redirectUri = `${window.location.origin}/(auth)/callback`;
+
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider: "google",
+          options: {
+            redirectTo: redirectUri,
+          },
+        });
+
+        if (error) throw error;
+
+        if (data?.url) {
+          window.location.href = data.url;
+        }
+
+        return;
+      }
+
+      // Native (Expo) flow: Use WebBrowser auth session and handle tokens returned
+      // via the auth session callback.
+      // Use the app deep link for redirect handling on native
       const redirectUri = Linking.createURL("auth/callback");
-      
-      console.log("Redirect URI:", redirectUri);
 
       // Get the OAuth URL from Supabase
       const { data, error } = await supabase.auth.signInWithOAuth({
@@ -75,66 +96,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
 
       if (data?.url) {
-        console.log("Opening auth URL...");
-        
-        // Open the auth URL in an auth session
-        // The second parameter tells the browser what URL pattern to listen for
-        const result = await WebBrowser.openAuthSessionAsync(
-          data.url,
-          redirectUri,
-          {
-            showInRecents: true,
-          }
-        );
-
-        console.log("Auth result type:", result.type);
+        const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUri, {
+          showInRecents: true,
+        });
 
         if (result.type === "success" && result.url) {
           const url = result.url;
-          console.log("Callback URL received:", url);
-          
-          // Try to extract tokens from hash fragment first (most common for Supabase)
+
+          // Try to extract tokens from hash fragment first
           if (url.includes("#")) {
             const hashFragment = url.split("#")[1];
             const hashParams = new URLSearchParams(hashFragment);
             const accessToken = hashParams.get("access_token");
             const refreshToken = hashParams.get("refresh_token");
 
-            console.log("Found tokens in hash:", !!accessToken, !!refreshToken);
-
             if (accessToken && refreshToken) {
               const { error: sessionError } = await supabase.auth.setSession({
                 access_token: accessToken,
                 refresh_token: refreshToken,
               });
-              if (sessionError) {
-                console.error("Session error:", sessionError);
-                throw sessionError;
-              }
-              console.log("Session set successfully!");
+              if (sessionError) throw sessionError;
               return;
             }
           }
-          
-          // Fallback: try query params
+
+          // Fallback: try query params or alternate parsing
           try {
             const urlObj = new URL(url);
             const accessToken = urlObj.searchParams.get("access_token");
             const refreshToken = urlObj.searchParams.get("refresh_token");
 
             if (accessToken && refreshToken) {
-              console.log("Found tokens in query params");
               await supabase.auth.setSession({
                 access_token: accessToken,
                 refresh_token: refreshToken,
               });
             }
           } catch (urlError) {
-            console.log("Could not parse URL as standard URL, trying alternate parsing");
-            // Handle exp:// URLs which may not parse as standard URLs
             const tokenMatch = url.match(/access_token=([^&]+)/);
             const refreshMatch = url.match(/refresh_token=([^&]+)/);
-            
+
             if (tokenMatch && refreshMatch) {
               await supabase.auth.setSession({
                 access_token: tokenMatch[1],

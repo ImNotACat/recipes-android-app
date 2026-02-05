@@ -1,8 +1,21 @@
-# Plateful
 
-A family recipe app built with React Native and Expo, featuring Google OAuth authentication via Supabase.
+<p align="center">
+  <img src="assets/icon.png" alt="Plateful Logo" width="120" />
+</p>
 
-## Tech Stack
+# 🥣 Plateful
+
+<p align="center">
+  <b>Wholesome family recipes, always at your fingertips!</b> <br/>
+  <i>Built with love, React Native, and a sprinkle of magic. ✨</i>
+</p>
+
+A family recipe app to keep your favorite dishes close, share with loved ones, and never lose grandma’s secret ingredient again. 🍲👩‍🍳
+
+
+---
+
+## 🛠️ Tech Stack
 
 - **Framework**: React Native with Expo
 - **Routing**: Expo Router (file-based routing)
@@ -11,7 +24,7 @@ A family recipe app built with React Native and Expo, featuring Google OAuth aut
 - **State Management**: TanStack Query (React Query)
 - **Language**: TypeScript
 
-## Project Structure
+## 🗂️ Project Structure
 
 ```
 Plateful/
@@ -32,7 +45,7 @@ Plateful/
 └── ...config files
 ```
 
-## Getting Started
+## 🚀 Getting Started
 
 ### Prerequisites
 
@@ -82,9 +95,9 @@ npm run ios
 npm run web
 ```
 
-## Key Concepts
+## 🧠 Key Concepts
 
-### Authentication Flow
+### 🔐 Authentication Flow
 
 1. User taps "Continue with Google" on sign-in screen
 2. App opens browser for Google OAuth
@@ -92,14 +105,14 @@ npm run web
 4. App captures tokens and establishes session
 5. User is redirected to home screen
 
-### Route Groups
+### 🗂️ Route Groups
 
 - `(auth)` - Routes only accessible when NOT signed in
 - `(app)` - Routes only accessible when signed in
 
 The layouts automatically handle redirects based on authentication state.
 
-### NativeWind (Tailwind)
+### 💨 NativeWind (Tailwind)
 
 Use Tailwind classes directly in your components:
 
@@ -109,7 +122,7 @@ Use Tailwind classes directly in your components:
 </View>
 ```
 
-### TanStack Query
+### 🍽️ TanStack Query
 
 Use for data fetching with automatic caching:
 
@@ -131,7 +144,7 @@ function useRecipes() {
 }
 ```
 
-## Next Steps
+## ⏭️ Next Steps
 
 Now that authentication is set up, you can:
 
@@ -141,19 +154,26 @@ Now that authentication is set up, you can:
 4. **Implement search** functionality
 5. **Add favorites** feature with user-specific data
 
-## Troubleshooting
+## 🐞 Troubleshooting
 
-### OAuth not working on mobile?
+### ❓ OAuth not working on mobile?
 
 - Make sure the app scheme `plateful` is configured in `app.json`
 - Verify the redirect URL in Supabase matches: `plateful://auth/callback`
 
-### Styles not applying?
+### 🎨 Styles not applying?
 
 - Clear Metro cache: `npx expo start --clear`
 - Ensure `global.css` is imported in root layout
 
-### Session not persisting?
+### 🔒 Session not persisting?
+
+---
+
+<p align="center">
+  <b>Made with ❤️ by your family, for your family.</b><br/>
+  <i>Happy cooking! 🍳✨</i>
+</p>
 
 - Check that SecureStore is working (only on native, not web)
 - Verify Supabase credentials are correct

@@ -77,13 +77,22 @@ export default function RecipeDetailScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView 
-        className="flex-1 items-center justify-center"
-        style={{ backgroundColor: isDark ? '#1F1D2B' : 'white' }}
-      >
-        <ActivityIndicator size="large" color={isDark ? "#EA7C69" : "#EA4335"} />
-        <Text style={{ color: isDark ? '#ABBBC2' : '#9CA3AF', marginTop: 12 }}>Loading recipe...</Text>
-      </SafeAreaView>
+      <>
+        <Stack.Screen
+          options={{
+            headerShown: false,
+            gestureEnabled: true,
+            gestureDirection: "horizontal",
+          }}
+        />
+        <SafeAreaView 
+          className="flex-1 items-center justify-center"
+          style={{ backgroundColor: isDark ? '#1F1D2B' : 'white' }}
+        >
+          <ActivityIndicator size="large" color={isDark ? "#EA7C69" : "#EA4335"} />
+          <Text style={{ color: isDark ? '#ABBBC2' : '#9CA3AF', marginTop: 12 }}>Loading recipe...</Text>
+        </SafeAreaView>
+      </>
     );
   }
 

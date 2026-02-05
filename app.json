@@ -15,7 +15,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.yourname.plateful"
+      "bundleIdentifier": "com.kvzza.plateful"
     },
     "android": {
       "adaptiveIcon": {
@@ -23,7 +23,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.yourname.plateful"
+      "package": "com.kvzza.plateful"
     },
     "web": {
       "favicon": "./assets/favicon.png",

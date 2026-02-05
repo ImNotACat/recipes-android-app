@@ -548,8 +548,10 @@ export default function HomeScreen() {
           </ScrollView>
 
           {/* Recipe Cards */}
-          <View className="px-6">
-            {isLoading ? (
+          <View className="w-full">
+            <View className="px-6">
+              <View className="w-full mx-auto max-w-5xl">
+                {isLoading ? (
               <View className="items-center py-12">
                 <ActivityIndicator size="large" color={isDark ? "#EA7C69" : "#EA4335"} />
                 <Text style={{ color: isDark ? '#ABBBC2' : '#9CA3AF', marginTop: 12 }}>Loading recipes...</Text>
@@ -561,11 +563,11 @@ export default function HomeScreen() {
                 <Text style={{ color: isDark ? '#ABBBC2' : '#9CA3AF' }} className="text-sm mt-1">Please try again later</Text>
               </View>
             ) : filteredRecipes && filteredRecipes.length > 0 ? (
-              <View className="flex-row flex-wrap justify-between">
-                {filteredRecipes.map((recipe) => (
-                  <TouchableOpacity
-                    key={recipe.id}
-                    className="w-[48%] rounded-2xl mb-4 overflow-hidden active:opacity-80"
+                  <View className="flex-row flex-wrap justify-between">
+                    {filteredRecipes.map((recipe) => (
+                      <TouchableOpacity
+                        key={recipe.id}
+                        className="w-[48%] md:w-[32%] lg:w-[23%] rounded-2xl mb-4 overflow-hidden active:opacity-80"
                     style={{ 
                       backgroundColor: isDark ? '#252836' : 'white',
                       shadowColor: isDark ? '#000' : '#000',
@@ -626,8 +628,8 @@ export default function HomeScreen() {
                       />
                     </View>
                   </TouchableOpacity>
-                ))}
-              </View>
+                    ))}
+                  </View>
             ) : (
               <View className="items-center py-12">
                 <Text className="text-5xl mb-3">🍽️</Text>
@@ -659,6 +661,8 @@ export default function HomeScreen() {
                 )}
               </View>
             )}
+              </View>
+            </View>
           </View>
         </ScrollView>
       </SafeAreaView>

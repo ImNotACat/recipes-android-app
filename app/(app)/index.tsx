@@ -25,6 +25,7 @@ export default function HomeScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCalorieRanges, setSelectedCalorieRanges] = useState<number[]>([]);
   const [showAddMenu, setShowAddMenu] = useState(false);
+  const [showSignOutModal, setShowSignOutModal] = useState(false);
 
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) =>
@@ -88,30 +89,9 @@ export default function HomeScreen() {
     return true;
   });
 
-  const handleSignOut = async () => {
+  const handleSignOut = () => {
     setShowProfileMenu(false);
-    Alert.alert(
-      "Sign Out",
-      "Are you sure you want to sign out?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Sign Out",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              setIsSigningOut(true);
-              await signOut();
-            } catch (error) {
-              console.error("Sign out error:", error);
-              Alert.alert("Error", "Failed to sign out. Please try again.");
-            } finally {
-              setIsSigningOut(false);
-            }
-          },
-        },
-      ]
-    );
+    setShowSignOutModal(true);
   };
 
   const handleSettings = () => {
@@ -270,6 +250,59 @@ export default function HomeScreen() {
                     </Text>
                   </TouchableOpacity>
                 </View>
+              </Pressable>
+            </Modal>
+
+            {/* Custom Sign Out Modal (styled) */}
+            <Modal
+              visible={showSignOutModal}
+              transparent
+              animationType="fade"
+              onRequestClose={() => setShowSignOutModal(false)}
+            >
+              <Pressable
+                className="flex-1 justify-center items-center"
+                style={{ backgroundColor: 'rgba(0,0,0,0.4)' }}
+                onPress={() => setShowSignOutModal(false)}
+              >
+                <Pressable onPress={(e) => e.stopPropagation()}>
+                  <View
+                    className="w-[90%] max-w-[380px] rounded-2xl p-5"
+                    style={{ backgroundColor: isDark ? '#252836' : 'white' }}
+                  >
+                    <Text className="text-lg font-semibold mb-2" style={{ color: isDark ? '#FFFFFF' : '#111827' }}>Sign out</Text>
+                    <Text style={{ color: isDark ? '#ABBBC2' : '#6B7280' }} className="mb-5">Are you sure you want to sign out?</Text>
+
+                    <View className="flex-row justify-end gap-3">
+                      <TouchableOpacity
+                        className="px-4 py-2 rounded-xl"
+                        style={{ backgroundColor: isDark ? '#393C49' : '#F3F4F6' }}
+                        onPress={() => setShowSignOutModal(false)}
+                        disabled={isSigningOut}
+                      >
+                        <Text style={{ color: isDark ? '#ABBBC2' : '#374151' }}>Cancel</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        className="px-4 py-2 rounded-xl"
+                        style={{ backgroundColor: isDark ? '#EA7C69' : '#EA4335' }}
+                        onPress={async () => {
+                          try {
+                            setIsSigningOut(true);
+                            await signOut();
+                          } catch (error) {
+                            console.error('Sign out error:', error);
+                          } finally {
+                            setIsSigningOut(false);
+                            setShowSignOutModal(false);
+                          }
+                        }}
+                      >
+                        <Text style={{ color: '#FFFFFF' }}>{isSigningOut ? 'Signing out...' : 'Sign Out'}</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </Pressable>
               </Pressable>
             </Modal>
 
